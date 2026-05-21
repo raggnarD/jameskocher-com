@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>James W. Kocher - Professional Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">JWK</div>
+            <ul class="nav-menu">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#portfolio">Portfolio</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section (Featured Role) -->
+    <section class="hero" id="home">
+        <video class="hero-background-video" autoplay muted loop playsinline>
+            <source src="videos/ring-trailer.mp4" type="video/mp4">
+        </video>
+        <div class="hero-content">
+            <h1 class="hero-title">Ring of Trust</h1>
+            <p class="hero-description">
+                Senior Product Manager at Amazon (Ring). Shaping the strategy for the world's most recognized 
+                smart doorbell brand, delivering innovations that help millions of families feel safer and more connected.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn btn-play" onclick="openModal('role1')">
+                    <span>▶</span> Play Trailer
+                </button>
+                <button class="btn btn-info" onclick="openModal('role1')">
+                    ℹ More Info
+                </button>
+            </div>
+        </div>
+        <div class="hero-fade"></div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section class="portfolio-section" id="portfolio">
+        <h2 class="section-title">My Professional Journey</h2>
+        
+        <!-- All Roles in One Horizontal Row -->
+        <div class="row-container">
+            <!-- Role 1: Amazon Ring (Most Recent) -->
+            <div class="movie-card" onclick="openModal('role1')">
+                <div class="movie-poster" id="poster-role1">
+                    <div class="poster-placeholder">Ring</div>
+                </div>
+                <div class="movie-info">
+                    <h4>Ring of Trust</h4>
+                    <p>Senior Product Manager</p>
+                    <p class="company-name">Ring/Amazon</p>
+                </div>
+            </div>
+
+            <!-- Role 2: Teltech -->
+            <div class="movie-card" onclick="openModal('role2')">
+                <div class="movie-poster" id="poster-role2">
+                    <div class="poster-placeholder">Teltech</div>
+                </div>
+                <div class="movie-info">
+                    <h4>The Shield</h4>
+                    <p>Senior Product Manager</p>
+                    <p class="company-name">Teltech</p>
+                </div>
+            </div>
+
+            <!-- Role 3: Locus Energy -->
+            <div class="movie-card" onclick="openModal('role3')">
+                <div class="movie-poster" id="poster-role3">
+                    <div class="poster-placeholder">Locus</div>
+                </div>
+                <div class="movie-info">
+                    <h4>Solar Protocol</h4>
+                    <p>Product Manager</p>
+                    <p class="company-name">Locus Energy</p>
+                </div>
+            </div>
+
+            <!-- Role 4: Mars Chocolate -->
+            <div class="movie-card" onclick="openModal('role4')">
+                <div class="movie-poster" id="poster-role4">
+                    <div class="poster-placeholder">Mars</div>
+                </div>
+                <div class="movie-info">
+                    <h4>Sweet Operations</h4>
+                    <p>Packaging Buyer</p>
+                    <p class="company-name">Mars Chocolate</p>
+                </div>
+            </div>
+
+            <!-- Role 5: Apple Inc -->
+            <div class="movie-card" onclick="openModal('role5')">
+                <div class="movie-poster" id="poster-role5">
+                    <div class="poster-placeholder">Apple</div>
+                </div>
+                <div class="movie-info">
+                    <h4>Empire of Inventory</h4>
+                    <p>Inventory Control Manager</p>
+                    <p class="company-name">Apple Inc.</p>
+                </div>
+            </div>
+
+            <!-- Role 6: Apple Genius Bar -->
+            <div class="movie-card" onclick="openModal('role6')">
+                <div class="movie-poster" id="poster-role6">
+                    <div class="poster-placeholder">Apple</div>
+                </div>
+                <div class="movie-info">
+                    <h4>Genius Bar: First Responder</h4>
+                    <p>Apple Genius</p>
+                    <p class="company-name">Apple Inc.</p>
+                </div>
+            </div>
+
+            <!-- Role 7: Franklin & Marshall College -->
+            <div class="movie-card" onclick="openModal('role7')">
+                <div class="movie-poster" id="poster-role7">
+                    <div class="poster-placeholder">F&M</div>
+                </div>
+                <div class="movie-info">
+                    <h4>The Workroom</h4>
+                    <p>Computer Workroom Manager</p>
+                    <p class="company-name">F&M College</p>
+                </div>
+            </div>
+
+            <!-- Role 8: The Big Short (Oldest) -->
+            <div class="movie-card" onclick="openModal('role8')">
+                <div class="movie-poster" id="poster-role8">
+                    <div class="poster-placeholder">The Big Short</div>
+                </div>
+                <div class="movie-info">
+                    <h4>Summer of Subprime</h4>
+                    <p>Accounting Assistant</p>
+                    <p class="company-name">Greywolf Capital Management</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal welcome-modal">
+        <div class="modal-content welcome-modal-content">
+            <span class="close" onclick="closeWelcomeModal()">&times;</span>
+            <div class="modal-body welcome-modal-body">
+                <div class="welcome-content">
+                    <h2 class="welcome-title">Welcome</h2>
+                    <p class="welcome-description">
+                        This site represents my work experience with a "streaming platform" UX and over the top dramatic manner.
+                    </p>
+                    <div class="welcome-credits">
+                        <p class="welcome-credits-title">This site was created using:</p>
+                        <ul class="welcome-credits-list">
+                            <li><strong>Ideation / Planning:</strong> ChatGPT, Grok</li>
+                            <li><strong>Creative:</strong> Sora, Grok Imagine, Google Gemini</li>
+                            <li><strong>Programming:</strong> Cursor</li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-play welcome-close-btn" onclick="closeWelcomeModal()">
+                        Get Started
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Role Details -->
+    <div id="roleModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="modal-body">
+                <div class="modal-video-container">
+                    <div class="video-placeholder" id="modalVideo">
+                        <p>Video Trailer Placeholder</p>
+                        <p class="video-hint">Your video will appear here</p>
+                    </div>
+                </div>
+                <div class="modal-info">
+                    <h2 id="modalTitle">Role Title</h2>
+                    <p id="modalDescription">Role description will appear here</p>
+                    <div class="modal-details">
+                        <p><strong>Position:</strong> <span id="modalPosition">Position</span></p>
+                        <p><strong>Company:</strong> <span id="modalCompany">Company</span></p>
+                        <p><strong>Duration:</strong> <span id="modalDuration">Duration</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

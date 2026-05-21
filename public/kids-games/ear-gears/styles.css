@@ -1,0 +1,418 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 50%, #1a252f 100%);
+    min-height: 100vh;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-x: hidden;
+}
+
+.game-container {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 1400px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 2em;
+    color: #34495e;
+    margin-bottom: 8px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+    color: #666;
+    font-size: 0.88em;
+    margin-bottom: 10px;
+}
+
+.btn-back {
+    padding: 8px 16px;
+    background: #34495e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: #2c3e50;
+    transform: translateY(-2px);
+}
+
+.main-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.left-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.center-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.right-panel {
+    width: 250px;
+    flex-shrink: 0;
+}
+
+.gears-container, .slots-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.gears-container h2, .slots-container h2 {
+    color: #34495e;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.gears-area {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 15px;
+    min-height: 500px;
+    align-items: center;
+    justify-items: center;
+}
+
+.slots-area {
+    position: relative;
+    width: 100%;
+    min-height: 500px;
+    background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+    border-radius: 12px;
+    border: 3px dashed #95a5a6;
+}
+
+.gear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: all 0.3s ease;
+    position: relative;
+    user-select: none;
+}
+
+.gear:active {
+    cursor: grabbing;
+}
+
+.gear.dragging {
+    opacity: 0.5;
+    transform: scale(0.9);
+    z-index: 1000;
+}
+
+.gear.matched {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+}
+
+.gear.selected {
+    outline: 4px solid #f39c12;
+    outline-offset: 4px;
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(243, 156, 18, 0.5);
+}
+
+.gear-word {
+    position: absolute;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: black;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.gear-svg {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.gear:hover .gear-svg {
+    transform: scale(1.1) rotate(15deg);
+}
+
+.gear.dragging .gear-svg {
+    transform: scale(0.9) rotate(-15deg);
+}
+
+/* Gear colors and sizes */
+.gear.size-1 { width: 80px; height: 80px; }
+.gear.size-2 { width: 90px; height: 90px; }
+.gear.size-3 { width: 100px; height: 100px; }
+.gear.size-4 { width: 110px; height: 110px; }
+.gear.size-5 { width: 120px; height: 120px; }
+.gear.size-6 { width: 130px; height: 130px; }
+.gear.size-7 { width: 140px; height: 140px; }
+.gear.size-8 { width: 150px; height: 150px; }
+
+.slot-circle {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border: 4px solid #2c3e50;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.slot-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.slot-circle.drag-over {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    border-color: #e67e22;
+    transform: scale(1.2);
+    box-shadow: 0 8px 16px rgba(243, 156, 18, 0.5);
+}
+
+.slot-circle.matched {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    border-color: #229954;
+    animation: matchPulse 0.5s ease;
+    cursor: default;
+}
+
+@keyframes matchPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.slot-circle::before {
+    content: '🔊';
+    font-size: 1.5em;
+    pointer-events: none;
+}
+
+.slot-circle.matched::before {
+    content: '✓';
+    font-size: 2em;
+    color: white;
+}
+
+.slot-gear {
+    position: absolute;
+    pointer-events: none;
+    z-index: 5;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.progress-container, .grade-levels-container, .game-status {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.progress-container h2, .grade-levels-container h2, .game-status h2 {
+    color: #34495e;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.progress-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+}
+
+.progress-label {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.progress-value {
+    color: #34495e;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.grade-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.grade-badge {
+    padding: 8px 16px;
+    background: #95a5a6;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.grade-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.grade-badge.active {
+    background: #27ae60;
+    box-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+    opacity: 1;
+}
+
+.word-count-display {
+    text-align: center;
+    font-size: 1em;
+    font-weight: bold;
+    margin-top: 10px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    color: #27ae60;
+}
+
+.status-display {
+    text-align: center;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+}
+
+.status-icon {
+    font-size: 1.5em;
+}
+
+.status-text {
+    color: #34495e;
+    font-weight: bold;
+}
+
+.completion-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 1000;
+    display: none;
+    border: 4px solid #34495e;
+}
+
+.completion-message.show {
+    display: block;
+    animation: popIn 0.5s ease;
+}
+
+@keyframes popIn {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.completion-message h2 {
+    font-size: 2.5em;
+    color: #34495e;
+    margin-bottom: 15px;
+}
+
+.completion-message p {
+    font-size: 1.2em;
+    color: #666;
+}
+
+.celebration-gear {
+    animation: gearSpin 2s linear infinite;
+}
+
+@keyframes gearSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1200px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .right-panel {
+        width: 100%;
+    }
+
+    .gears-area, .slots-area {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .gear.size-1, .gear.size-2, .gear.size-3, .gear.size-4,
+    .gear.size-5, .gear.size-6, .gear.size-7, .gear.size-8 {
+        width: 70px;
+        height: 70px;
+    }
+
+    .slot {
+        min-height: 100px;
+    }
+}
+

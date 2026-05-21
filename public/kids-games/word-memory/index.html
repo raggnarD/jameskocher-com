@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Memory: Sound Match</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🔊 Word Memory 🔊</h1>
+            <p class="subtitle">Remember where the words are hidden!</p>
+            <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
+        </header>
+
+        <div class="main-content">
+            <!-- Start Screen -->
+            <div class="start-screen" id="startScreen">
+                <div class="start-content">
+                    <h2>Ready to Play?</h2>
+                    <p>You'll see 5 words, then they'll disappear. Listen to the sounds and match them to the correct spots!</p>
+                    <button id="startBtn" class="btn-primary">Start Game</button>
+                </div>
+            </div>
+
+            <!-- Game Screen -->
+            <div class="game-screen" id="gameScreen" style="display: none;">
+                <!-- Words Display Area (shown initially, then hidden) -->
+                <div class="words-display-container" id="wordsDisplayContainer">
+                    <h2>Remember these words!</h2>
+                    <div class="words-grid" id="wordsGrid">
+                        <!-- Words will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Hidden Words Area (shown after words are hidden) -->
+                <div class="hidden-words-container" id="hiddenWordsContainer" style="display: none;">
+                    <h2>Where were the words?</h2>
+                    <div class="hidden-words-grid" id="hiddenWordsGrid">
+                        <!-- Hidden word positions will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Speaker Buttons -->
+                <div class="speakers-container" id="speakersContainer" style="display: none;">
+                    <h2>Click the speakers to hear the words</h2>
+                    <div class="speakers-grid" id="speakersGrid">
+                        <!-- Speaker buttons will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Feedback -->
+                <div class="feedback" id="feedback"></div>
+
+                <!-- Game Info -->
+                <div class="game-info">
+                    <div class="info-item">
+                        <span class="info-label">Matches:</span>
+                        <span class="info-value" id="matchCount">0 / 5</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Win Screen -->
+            <div class="win-screen" id="winScreen" style="display: none;">
+                <div class="win-content">
+                    <h2>🎉 You Won! 🎉</h2>
+                    <p>Great job matching all the words!</p>
+                    <button id="playAgainBtn" class="btn-primary">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sight Words: Thanksgiving Adventure</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🦃 Sight Words Adventure 🍽️</h1>
+            <p class="subtitle">Help the turkey collect feathers by spelling sight words!</p>
+            <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="turkey-container">
+                    <div class="turkey" id="turkey">
+                        <div class="turkey-body">🦃</div>
+                        <div class="feathers-container" id="feathersContainer">
+                            <!-- Feathers will be added here -->
+                        </div>
+                    </div>
+                    <div class="turkey-label">Help me collect my feathers!</div>
+                </div>
+
+                <div class="word-display-container">
+                    <div class="word-display" id="wordDisplay">
+                        <!-- Word will be displayed here -->
+                    </div>
+                    <div class="word-hint" id="wordHint"></div>
+                </div>
+
+                <div class="spelling-area">
+                    <h2>Spell the Word:</h2>
+                    <div class="letter-buttons" id="letterButtons">
+                        <!-- Letter buttons will be generated -->
+                    </div>
+                    <div class="spelling-display">
+                        <div class="spelling-label">Your Spelling:</div>
+                        <div class="spelling-word" id="spellingWord"></div>
+                    </div>
+                    <div class="spelling-controls">
+                        <button id="clearSpellingBtn" class="btn-secondary">Clear</button>
+                        <button id="submitSpellingBtn" class="btn-primary">Submit</button>
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+            </div>
+
+            <div class="right-panel">
+                <div class="progress-container">
+                    <h2>Progress</h2>
+                    <div class="progress-item">
+                        <span class="progress-label">Feathers Collected:</span>
+                        <span class="progress-value" id="featherCount">0 / 10</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Words Correct:</span>
+                        <span class="progress-value" id="correctCount">0</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Words Attempted:</span>
+                        <span class="progress-value" id="attemptCount">0</span>
+                    </div>
+                </div>
+
+                <div class="food-container">
+                    <h2>Thanksgiving Food</h2>
+                    <div class="food-items" id="foodItems">
+                        <div class="food-item locked" data-food="turkey">🍗</div>
+                        <div class="food-item locked" data-food="pie">🥧</div>
+                        <div class="food-item locked" data-food="corn">🌽</div>
+                        <div class="food-item locked" data-food="bread">🍞</div>
+                        <div class="food-item locked" data-food="potato">🥔</div>
+                    </div>
+                    <div class="food-progress">
+                        <div class="food-progress-bar">
+                            <div class="food-progress-fill" id="foodProgressFill"></div>
+                        </div>
+                        <div class="food-progress-text" id="foodProgressText">0 / 5 foods ready</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-message" id="winMessage">
+        <h2>🎉 Happy Thanksgiving! 🎉</h2>
+        <p>You helped the turkey collect all feathers and prepare the feast!</p>
+        <button class="btn-primary" onclick="location.reload()">Play Again</button>
+        <button class="btn-secondary" onclick="window.location.href='../index.html'">Back to Menu</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+

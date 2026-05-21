@@ -1,0 +1,531 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7ec8e3 100%);
+    min-height: 100vh;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-x: hidden;
+}
+
+.game-container {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 1400px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 2em;
+    color: #1e3c72;
+    margin-bottom: 8px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+    color: #666;
+    font-size: 0.88em;
+    margin-bottom: 10px;
+}
+
+.btn-back {
+    padding: 8px 16px;
+    background: #1e3c72;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: #2a5298;
+    transform: translateY(-2px);
+}
+
+.main-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.left-panel {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.center-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.right-panel {
+    width: 250px;
+    flex-shrink: 0;
+}
+
+.shark-container {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 3px solid #1e3c72;
+}
+
+.ocean-background {
+    position: relative;
+    min-height: 400px;
+    background: linear-gradient(to bottom, #7ec8e3 0%, #4a90e2 50%, #357abd 100%);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.shark-character {
+    position: absolute;
+    font-size: 4em;
+    bottom: 20px;
+    left: 20px;
+    z-index: 10;
+    transition: all 0.5s ease;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transform: scaleX(-1); /* Face right */
+}
+
+.progress-path {
+    position: absolute;
+    bottom: 80px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 5;
+}
+
+.progress-step {
+    width: 30px;
+    height: 30px;
+    background: #f39c12;
+    border: 3px solid #e67e22;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    font-size: 0.9em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.progress-step.completed {
+    background: #27ae60;
+    border-color: #229954;
+}
+
+.progress-step.current {
+    background: #3498db;
+    border-color: #2980b9;
+    transform: scale(1.2);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.5);
+}
+
+.lives-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+}
+
+.lives-container h3 {
+    color: #1e3c72;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.lives-display {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.life {
+    font-size: 2em;
+    transition: all 0.3s ease;
+}
+
+.life.lost {
+    opacity: 0.3;
+    transform: scale(0.8);
+}
+
+.word-game-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.current-step-info {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    border: 2px solid #1e3c72;
+}
+
+.current-step-info h2 {
+    color: #1e3c72;
+    font-size: 1.5em;
+    margin-bottom: 8px;
+}
+
+.current-step-info p {
+    color: #666;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.word-display-area {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+}
+
+.btn-audio {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto 15px;
+}
+
+.btn-audio:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.btn-audio:active {
+    transform: translateY(0);
+}
+
+.btn-audio.playing {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    animation: audioPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes audioPulse {
+    0%, 100% { transform: translateY(-2px) scale(1); }
+    50% { transform: translateY(-2px) scale(1.05); }
+}
+
+.audio-icon {
+    font-size: 1.3em;
+}
+
+.word-hint {
+    font-size: 1.1em;
+    color: #666;
+    font-style: italic;
+}
+
+.spelling-input-area {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    border: 2px solid #1e3c72;
+}
+
+.spelling-input-area h3 {
+    color: #1e3c72;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.word-input {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center;
+    border: 3px solid #1e3c72;
+    border-radius: 10px;
+    font-family: inherit;
+    margin-bottom: 15px;
+    text-transform: lowercase;
+    transition: all 0.3s ease;
+}
+
+.word-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+}
+
+.input-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 30px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(39, 174, 96, 0.4);
+}
+
+.btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d0d0d0;
+    transform: translateY(-2px);
+}
+
+.feedback {
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: bold;
+    min-height: 50px;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.feedback.correct {
+    background: #d4edda;
+    color: #155724;
+    border: 2px solid #c3e6cb;
+}
+
+.feedback.incorrect {
+    background: #f8d7da;
+    color: #721c24;
+    border: 2px solid #f5c6cb;
+}
+
+.feedback.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.progress-container, .grade-levels-container, .game-status {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.progress-container h2, .grade-levels-container h2, .game-status h2 {
+    color: #1e3c72;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.progress-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+}
+
+.progress-label {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.progress-value {
+    color: #1e3c72;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.grade-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.grade-badge {
+    padding: 8px 16px;
+    background: #95a5a6;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.grade-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.grade-badge.active {
+    background: #27ae60;
+    box-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+    opacity: 1;
+}
+
+.word-count-display {
+    text-align: center;
+    font-size: 1em;
+    font-weight: bold;
+    margin-top: 10px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    color: #27ae60;
+}
+
+.status-display {
+    text-align: center;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+}
+
+.status-icon {
+    font-size: 1.5em;
+}
+
+.status-text {
+    color: #1e3c72;
+    font-weight: bold;
+}
+
+.win-message, .game-over-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 1000;
+    display: none;
+    border: 4px solid #1e3c72;
+}
+
+.win-message.show, .game-over-message.show {
+    display: block;
+    animation: popIn 0.5s ease;
+}
+
+@keyframes popIn {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.win-message h2, .game-over-message h2 {
+    font-size: 2.5em;
+    color: #1e3c72;
+    margin-bottom: 15px;
+}
+
+.win-message p, .game-over-message p {
+    font-size: 1.2em;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.win-message .btn-primary,
+.win-message .btn-secondary,
+.game-over-message .btn-primary,
+.game-over-message .btn-secondary {
+    margin: 5px;
+}
+
+@media (max-width: 1200px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .left-panel, .right-panel {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .progress-path {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .progress-step {
+        width: 25px;
+        height: 25px;
+        font-size: 0.8em;
+    }
+
+    .shark-character {
+        font-size: 3em;
+    }
+}
+

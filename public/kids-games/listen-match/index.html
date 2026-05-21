@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listen & Match: Robotic Turkey</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🤖 Listen & Match 🦃</h1>
+            <p class="subtitle">Listen to the word and select the matching word!</p>
+            <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="turkey-container">
+                    <div class="robotic-turkey" id="roboticTurkey">
+                        <div class="turkey-body">🤖🦃</div>
+                        <div class="turkey-speech" id="turkeySpeech"></div>
+                    </div>
+                    <div class="turkey-label">I'll say a word. Can you find it?</div>
+                </div>
+
+                <div class="audio-controls">
+                    <button id="playAudioBtn" class="btn-audio">
+                        <span class="audio-icon">🔊</span>
+                        <span>Listen to Word</span>
+                    </button>
+                    <div class="current-word-display" id="currentWordDisplay">
+                        <!-- Word will be displayed here after selection -->
+                    </div>
+                </div>
+
+                <div class="word-options-container">
+                    <h2>Select the word you heard:</h2>
+                    <div class="word-options" id="wordOptions">
+                        <!-- Word options will be generated here -->
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+            </div>
+
+            <div class="right-panel">
+                <div class="progress-container">
+                    <h2>Progress</h2>
+                    <div class="progress-item">
+                        <span class="progress-label">Correct:</span>
+                        <span class="progress-value" id="correctCount">0</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Attempted:</span>
+                        <span class="progress-value" id="attemptCount">0</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Accuracy:</span>
+                        <span class="progress-value" id="accuracy">0%</span>
+                    </div>
+                </div>
+
+                <div class="grade-levels-container">
+                    <h2>Grade Levels</h2>
+                    <div class="grade-badges" id="gradeBadges">
+                        <div class="grade-badge active" data-grade="prek">Pre-K</div>
+                        <div class="grade-badge active" data-grade="k">K</div>
+                        <div class="grade-badge active" data-grade="1st">1st</div>
+                        <div class="grade-badge active" data-grade="2nd">2nd</div>
+                    </div>
+                    <div class="word-count-display" id="wordCountDisplay"></div>
+                </div>
+
+                <div class="turkey-status">
+                    <h2>Turkey Status</h2>
+                    <div class="status-display" id="statusDisplay">
+                        <div class="status-item">
+                            <span class="status-icon">⚡</span>
+                            <span class="status-text">Ready to play!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+

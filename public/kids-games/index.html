@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational Games for Kids</title>
+    <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>👋 Welcome!</h2>
+            <div class="modal-body">
+                <p>This is a collection of <strong>educational elementary school games</strong> that my son and I built together on the weekends.</p>
+                <p>It started as a fun way for me to learn <strong>Cursor</strong> and for me to show him an introduction to <strong>GenAI coding</strong>.</p>
+                <p>We hope you enjoy playing and learning! 🎉</p>
+            </div>
+            <button class="modal-button" onclick="closeWelcomeModal()">Let's Play!</button>
+        </div>
+    </div>
+
+    <div class="menu-container">
+        <header>
+            <h1>🎮 Educational Games 🎮</h1>
+            <p class="subtitle">Choose a game to play and learn!</p>
+        </header>
+
+        <div class="game-categories">
+            <div class="category-section">
+                <div class="category-header">
+                    <h2>🔢 Math Games</h2>
+                </div>
+                <div class="games-grid">
+                    <div class="game-card" onclick="window.location.href='math-adventure/index.html'">
+                        <div class="game-icon">🐕🐱</div>
+                        <h2>Math Adventure</h2>
+                        <p>Help the dog reach the cat by solving math problems!</p>
+                        <div class="game-features">
+                            <span>➕ Addition</span>
+                            <span>➖ Subtraction</span>
+                            <span>✖️ Multiplication</span>
+                            <span>➗ Division</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-section">
+                <div class="category-header">
+                    <h2>📚 Sight Words Games</h2>
+                </div>
+                <div class="games-grid">
+                    <div class="game-card" onclick="window.location.href='sight-words/index.html'">
+                        <div class="game-icon">🦃</div>
+                        <h2>Sight Words</h2>
+                        <p>Help the turkey collect feathers by spelling sight words!</p>
+                        <div class="game-features">
+                            <span>📝 Spelling</span>
+                            <span>🪶 Feathers</span>
+                            <span>🍽️ Thanksgiving</span>
+                            <span>📚 1st Grade</span>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="window.location.href='listen-match/index.html'">
+                        <div class="game-icon">🤖🦃</div>
+                        <h2>Listen & Match</h2>
+                        <p>Listen to words and match them with the robotic turkey!</p>
+                        <div class="game-features">
+                            <span>🔊 Audio</span>
+                            <span>🤖 Robot Turkey</span>
+                            <span>👂 Listening</span>
+                            <span>📚 Pre-K to 2nd</span>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="window.location.href='ear-gears/index.html'">
+                        <div class="game-icon">⚙️</div>
+                        <h2>Ear Gears</h2>
+                        <p>Drag and drop gears to match sight words!</p>
+                        <div class="game-features">
+                            <span>⚙️ Gears</span>
+                            <span>🖱️ Drag & Drop</span>
+                            <span>🔤 Matching</span>
+                            <span>📚 Pre-K to 2nd</span>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="window.location.href='shark-sight/index.html'">
+                        <div class="game-icon">🦈</div>
+                        <h2>Shark Sight</h2>
+                        <p>Help the shark swim through the ocean by spelling words!</p>
+                        <div class="game-features">
+                            <span>🦈 Shark</span>
+                            <span>⌨️ Typing</span>
+                            <span>💙 Lives</span>
+                            <span>📚 Pre-K to 2nd</span>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="window.location.href='word-memory/index.html'">
+                        <div class="game-icon">🔊</div>
+                        <h2>Word Memory</h2>
+                        <p>Remember where words are hidden by listening to sounds!</p>
+                        <div class="game-features">
+                            <span>🔊 Audio</span>
+                            <span>🧠 Memory</span>
+                            <span>🎯 Matching</span>
+                            <span>📚 Pre-K to 2nd</span>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="window.location.href='word-bingo/index.html'">
+                        <div class="game-icon">🎯</div>
+                        <h2>Word Bingo</h2>
+                        <p>Listen to words and mark them on your bingo card!</p>
+                        <div class="game-features">
+                            <span>🎯 Bingo</span>
+                            <span>🔊 Audio</span>
+                            <span>🎲 Matching</span>
+                            <span>📚 Pre-K to 2nd</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Have fun learning! 🎉</p>
+        </footer>
+    </div>
+
+    <script>
+        // Show welcome modal on first visit
+        document.addEventListener('DOMContentLoaded', function() {
+            const hasSeenModal = localStorage.getItem('hasSeenWelcomeModal');
+            if (!hasSeenModal) {
+                const modal = document.getElementById('welcomeModal');
+                modal.style.display = 'block';
+            }
+        });
+
+        // Close modal function
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            modal.style.display = 'none';
+            localStorage.setItem('hasSeenWelcomeModal', 'true');
+        }
+
+        // Close modal when clicking the X
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeBtn = document.querySelector('.modal-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeWelcomeModal);
+            }
+
+            // Close modal when clicking outside of it
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                window.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeWelcomeModal();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

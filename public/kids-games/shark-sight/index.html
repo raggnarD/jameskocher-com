@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shark Sight: Sight Word Adventure</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🦈 Shark Sight 🦈</h1>
+            <p class="subtitle">Help the shark swim through the ocean by spelling sight words!</p>
+            <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="shark-container">
+                    <div class="ocean-background">
+                        <div class="shark-character" id="sharkCharacter">🦈</div>
+                        <div class="progress-path" id="progressPath">
+                            <!-- Progress steps will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lives-container">
+                    <h3>Lives</h3>
+                    <div class="lives-display" id="livesDisplay">
+                        <!-- Lives will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="center-panel">
+                <div class="word-game-container">
+                    <div class="current-step-info">
+                        <h2>Step <span id="currentStep">1</span> of 10</h2>
+                        <p>Correct words this step: <span id="stepProgress">0 / 2</span></p>
+                    </div>
+
+                    <div class="word-display-area">
+                        <button id="playWordBtn" class="btn-audio">
+                            <span class="audio-icon">🔊</span>
+                            <span>Listen to Word</span>
+                        </button>
+                        <div class="word-hint" id="wordHint">Click the button to hear the word!</div>
+                    </div>
+
+                    <div class="spelling-input-area">
+                        <h3>Spell the word:</h3>
+                        <input type="text" id="wordInput" class="word-input" placeholder="Type the word here..." autocomplete="off" spellcheck="false">
+                        <div class="input-controls">
+                            <button id="clearInputBtn" class="btn-secondary">Clear</button>
+                            <button id="submitWordBtn" class="btn-primary">Submit</button>
+                        </div>
+                    </div>
+
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="progress-container">
+                    <h2>Progress</h2>
+                    <div class="progress-item">
+                        <span class="progress-label">Current Step:</span>
+                        <span class="progress-value" id="stepDisplay">1 / 10</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Words Correct:</span>
+                        <span class="progress-value" id="correctCount">0</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Words Attempted:</span>
+                        <span class="progress-value" id="attemptCount">0</span>
+                    </div>
+                </div>
+
+                <div class="grade-levels-container">
+                    <h2>Grade Levels</h2>
+                    <div class="grade-badges" id="gradeBadges">
+                        <div class="grade-badge active" data-grade="prek">Pre-K</div>
+                        <div class="grade-badge active" data-grade="k">K</div>
+                        <div class="grade-badge active" data-grade="1st">1st</div>
+                        <div class="grade-badge active" data-grade="2nd">2nd</div>
+                    </div>
+                    <div class="word-count-display" id="wordCountDisplay"></div>
+                </div>
+
+                <div class="game-status">
+                    <h2>Status</h2>
+                    <div class="status-display" id="statusDisplay">
+                        <div class="status-item">
+                            <span class="status-icon">🦈</span>
+                            <span class="status-text">Ready to swim!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-message" id="winMessage">
+        <h2>🎉 You Did It! 🎉</h2>
+        <p>Congratulations! The shark reached the end!</p>
+        <p>You completed all 10 steps!</p>
+        <button class="btn-primary" onclick="location.reload()">Play Again</button>
+        <button class="btn-secondary" onclick="window.location.href='../index.html'">Back to Menu</button>
+    </div>
+
+    <div class="game-over-message" id="gameOverMessage">
+        <h2>💔 Game Over 💔</h2>
+        <p>The shark ran out of lives!</p>
+        <p>You reached step <span id="finalStep">1</span>.</p>
+        <button class="btn-primary" onclick="location.reload()">Try Again</button>
+        <button class="btn-secondary" onclick="window.location.href='../index.html'">Back to Menu</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+

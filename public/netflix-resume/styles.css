@@ -1,0 +1,614 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --netflix-red: #e50914;
+    --netflix-black: #141414;
+    --netflix-dark: #181818;
+    --netflix-gray: #2f2f2f;
+    --netflix-light-gray: #808080;
+    --text-white: #ffffff;
+    --text-gray: #b3b3b3;
+}
+
+body {
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--netflix-black);
+    color: var(--text-white);
+    overflow-x: hidden;
+}
+
+/* Navigation */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 20px 50px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+    z-index: 1000;
+    transition: background 0.3s;
+}
+
+.navbar.scrolled {
+    background-color: var(--netflix-black);
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--netflix-red);
+    letter-spacing: 2px;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+.nav-menu a {
+    color: var(--text-white);
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.nav-menu a:hover {
+    color: var(--text-gray);
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+    height: 60vh;
+    min-height: 375px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 38px;
+    margin-top: 80px;
+    overflow: hidden;
+}
+
+.hero-background-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%) scale(1.2);
+    object-fit: cover;
+    z-index: 0;
+    opacity: 0.6;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 450px;
+    animation: fadeInUp 1s ease-out;
+}
+
+.hero-title {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    line-height: 1.2;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.hero-description {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 23px;
+    color: var(--text-gray);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-play {
+    background-color: var(--text-white);
+    color: var(--netflix-black);
+}
+
+.btn-play:hover {
+    background-color: rgba(255,255,255,0.8);
+    transform: scale(1.05);
+}
+
+.btn-info {
+    background-color: rgba(109, 109, 110, 0.7);
+    color: var(--text-white);
+}
+
+.btn-info:hover {
+    background-color: rgba(109, 109, 110, 0.9);
+    transform: scale(1.05);
+}
+
+.hero-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: linear-gradient(180deg, transparent 0%, var(--netflix-black) 100%);
+    z-index: 1;
+}
+
+/* Portfolio Section */
+.portfolio-section {
+    padding: 50px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 40px;
+    padding-left: 10px;
+}
+
+.row-container {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 20px 10px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+.row-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.row-container::-webkit-scrollbar-track {
+    background: var(--netflix-dark);
+    border-radius: 4px;
+}
+
+.row-container::-webkit-scrollbar-thumb {
+    background: var(--netflix-gray);
+    border-radius: 4px;
+}
+
+.row-container::-webkit-scrollbar-thumb:hover {
+    background: var(--netflix-light-gray);
+}
+
+/* Movie Cards */
+.movie-card {
+    min-width: 200px;
+    cursor: pointer;
+    transition: transform 0.3s;
+    position: relative;
+}
+
+.movie-card:hover {
+    transform: scale(1.1);
+    z-index: 10;
+}
+
+.movie-poster {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, var(--netflix-gray) 0%, var(--netflix-dark) 100%);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Recently Added Pill - dynamically applies to first card */
+.recently-added-pill {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background-color: #e50914;
+    color: var(--text-white);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Alternative: Use CSS to automatically apply to first card */
+.row-container .movie-card:first-child .movie-poster::before {
+    content: "Recently Added";
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background-color: #e50914;
+    color: var(--text-white);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.poster-placeholder {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text-white);
+    padding: 20px;
+}
+
+.movie-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 4px;
+}
+
+.movie-info h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-white);
+}
+
+.movie-info p {
+    font-size: 14px;
+    color: var(--text-gray);
+}
+
+.movie-info .company-name {
+    font-size: 12px;
+    color: var(--netflix-light-gray);
+    margin-top: 3px;
+    font-weight: 500;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    animation: fadeIn 0.3s;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: var(--netflix-dark);
+    margin: auto;
+    padding: 0;
+    width: 90%;
+    max-width: 900px;
+    border-radius: 8px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: var(--netflix-black);
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--netflix-gray);
+    border-radius: 4px;
+}
+
+.close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    color: var(--text-white);
+    font-size: 40px;
+    font-weight: 300;
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.3s;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--netflix-red);
+}
+
+.modal-body {
+    padding: 40px;
+}
+
+.modal-video-container {
+    width: 100%;
+    margin-bottom: 30px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.video-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, var(--netflix-gray) 0%, var(--netflix-dark) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    font-size: 18px;
+    position: relative;
+}
+
+.video-placeholder video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background-color: var(--netflix-black);
+}
+
+.video-hint {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-top: 10px;
+}
+
+.modal-info h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--text-white);
+}
+
+.modal-info > p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-gray);
+    margin-bottom: 20px;
+}
+
+.modal-details {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--netflix-gray);
+}
+
+.modal-details p {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: var(--text-gray);
+}
+
+.modal-details strong {
+    color: var(--text-white);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Welcome Modal */
+.welcome-modal-content {
+    max-width: 600px;
+    text-align: center;
+}
+
+.welcome-modal-body {
+    padding: 50px 40px;
+}
+
+.welcome-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+.welcome-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 10px;
+}
+
+.welcome-description {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-gray);
+    margin-bottom: 10px;
+}
+
+.welcome-credits {
+    width: 100%;
+    margin-top: 20px;
+    padding-top: 25px;
+    border-top: 1px solid var(--netflix-gray);
+}
+
+.welcome-credits-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-white);
+    margin-bottom: 15px;
+}
+
+.welcome-credits-list {
+    list-style: none;
+    text-align: left;
+    padding: 0;
+    margin: 0;
+}
+
+.welcome-credits-list li {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-gray);
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.welcome-credits-list li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--netflix-red);
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.welcome-credits-list li strong {
+    color: var(--text-white);
+    font-weight: 600;
+}
+
+.welcome-close-btn {
+    margin-top: 20px;
+    min-width: 150px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 15px 20px;
+    }
+
+    .logo {
+        font-size: 24px;
+    }
+
+    .nav-menu {
+        gap: 15px;
+    }
+
+    .nav-menu a {
+        font-size: 14px;
+    }
+
+            .hero {
+                height: 45vh;
+                min-height: 300px;
+                padding: 0 15px;
+            }
+
+            .hero-title {
+                font-size: 27px;
+            }
+
+            .hero-description {
+                font-size: 12px;
+            }
+
+    .portfolio-section {
+        padding: 30px 20px;
+    }
+
+    .movie-card {
+        min-width: 150px;
+    }
+
+    .movie-poster {
+        height: 225px;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .modal-body {
+        padding: 30px 20px;
+    }
+
+    .modal-info h2 {
+        font-size: 24px;
+    }
+}
+

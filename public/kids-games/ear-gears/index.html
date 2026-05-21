@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ear Gears: Sight Word Matching</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>⚙️ Ear Gears ⚙️</h1>
+            <p class="subtitle">Match the words by dragging gears to their slots!</p>
+            <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="gears-container">
+                    <h2>Drag the Gears</h2>
+                    <div class="gears-area" id="gearsArea">
+                        <!-- Gears will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="center-panel">
+                <div class="slots-container">
+                    <h2>Drop Zone - Click circles to hear words</h2>
+                    <div class="slots-area" id="slotsArea">
+                        <!-- Drop circles will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="progress-container">
+                    <h2>Progress</h2>
+                    <div class="progress-item">
+                        <span class="progress-label">Matched:</span>
+                        <span class="progress-value" id="matchedCount">0 / 8</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Rounds:</span>
+                        <span class="progress-value" id="roundCount">0</span>
+                    </div>
+                </div>
+
+                <div class="grade-levels-container">
+                    <h2>Grade Levels</h2>
+                    <div class="grade-badges" id="gradeBadges">
+                        <div class="grade-badge active" data-grade="prek">Pre-K</div>
+                        <div class="grade-badge active" data-grade="k">K</div>
+                        <div class="grade-badge active" data-grade="1st">1st</div>
+                        <div class="grade-badge active" data-grade="2nd">2nd</div>
+                    </div>
+                    <div class="word-count-display" id="wordCountDisplay"></div>
+                </div>
+
+                <div class="game-status">
+                    <h2>Status</h2>
+                    <div class="status-display" id="statusDisplay">
+                        <div class="status-item">
+                            <span class="status-icon">⚙️</span>
+                            <span class="status-text">Ready to play!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="completion-message" id="completionMessage">
+            <h2>🎉 All Gears Matched! 🎉</h2>
+            <p>Great job! Starting a new round...</p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+

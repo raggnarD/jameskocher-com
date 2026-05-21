@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --c-bg: 251 250 247;
+  --c-surface: 255 255 255;
+  --c-ink-900: 12 10 9;
+  --c-ink-800: 28 25 23;
+  --c-ink-700: 41 37 36;
+  --c-ink-600: 68 64 60;
+  --c-ink-500: 87 83 78;
+  --c-ink-400: 120 113 108;
+  --c-ink-300: 168 162 158;
+  --c-ink-200: 214 211 209;
+  --c-ink-100: 231 229 228;
+  --c-ink-50: 245 245 244;
+  --c-accent: 31 94 77;
+  --c-accent-soft: 232 241 238;
+  color-scheme: light;
+}
+
+.dark {
+  --c-bg: 14 13 11;
+  --c-surface: 24 22 20;
+  --c-ink-900: 250 250 249;
+  --c-ink-800: 220 218 215;
+  --c-ink-700: 190 187 183;
+  --c-ink-600: 160 156 150;
+  --c-ink-500: 130 125 118;
+  --c-ink-400: 110 105 98;
+  --c-ink-300: 92 86 80;
+  --c-ink-200: 64 58 53;
+  --c-ink-100: 44 39 35;
+  --c-ink-50: 30 27 24;
+  --c-accent: 110 200 165;
+  --c-accent-soft: 23 56 47;
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg text-ink-800 font-sans antialiased;
+  font-size: 16px;
+  line-height: 1.55;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::selection {
+  @apply bg-accent text-white;
+}
+
+.section {
+  @apply mx-auto max-w-5xl px-6 sm:px-8 py-10 sm:py-14;
+}
+
+.eyebrow {
+  @apply text-xs uppercase tracking-[0.18em] text-ink-500 font-medium;
+}
+
+.h-display {
+  @apply font-sans font-semibold text-4xl sm:text-5xl md:text-6xl tracking-tight text-ink-900 leading-[1.05];
+}
+
+.h-section {
+  @apply font-sans font-semibold text-3xl sm:text-4xl tracking-tight text-ink-900;
+}
+
+.body-lg {
+  @apply text-lg leading-relaxed text-ink-700;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.6, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0.6, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
