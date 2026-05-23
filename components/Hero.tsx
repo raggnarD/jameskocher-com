@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { profile } from '@/content/profile';
+import { asset } from '@/lib/asset';
 
 type CatLink = { label: string; href: string; external?: boolean };
 
@@ -55,7 +56,7 @@ export default function Hero() {
       <div
         className="absolute inset-0 -z-10 bg-cover bg-no-repeat"
         style={{
-          backgroundImage: "url('/assets/hero-mountain.jpg')",
+          backgroundImage: `url('${asset('/assets/hero-mountain.jpg')}')`,
           backgroundPosition: 'center 55%',
         }}
         aria-hidden
@@ -95,7 +96,7 @@ export default function Hero() {
 
           <div className="flex justify-end">
             <img
-              src="/assets/headshot.png"
+              src={asset('/assets/headshot.png')}
               alt="James Kocher"
               width={88}
               height={88}

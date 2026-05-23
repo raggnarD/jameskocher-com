@@ -2,6 +2,7 @@ import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import { apps, highlights } from '@/content/my-work';
+import { asset } from '@/lib/asset';
 
 export const metadata = {
   title: 'My Work — James Kocher',
@@ -40,7 +41,7 @@ export default function MyWorkPage() {
               >
                 <div className="aspect-[2/1] w-full overflow-hidden bg-white">
                   <img
-                    src={a.image}
+                    src={asset(a.image)}
                     alt={`${a.name} screenshot`}
                     className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
                   />
@@ -82,7 +83,7 @@ export default function MyWorkPage() {
               >
                 <div className="aspect-[2/1] w-full overflow-hidden bg-white">
                   <img
-                    src={h.image}
+                    src={asset(h.image)}
                     alt={`${h.name} preview`}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
