@@ -5,7 +5,7 @@ export const profile = {
     'I’m a Product Manager and builder who cares about making great products with scale in mind.',
   links: {
     website: 'https://jameskocher.com',
-    resume: 'https://resume.jameskocher.com',
+    resume: '/experience/',
     github: 'https://github.com/raggnarD',
     linkedin: 'https://www.linkedin.com/in/jameswkocher/',
   },

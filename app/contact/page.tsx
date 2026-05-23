@@ -46,7 +46,7 @@ export default function ContactPage() {
                   href={profile.links.resume}
                   className="text-accent hover:underline"
                 >
-                  Resume → resume.jameskocher.com
+                  Resume → jameskocher.com/experience
                 </a>
               </li>
             </ul>

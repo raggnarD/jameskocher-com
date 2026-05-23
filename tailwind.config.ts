@@ -33,6 +33,7 @@ const config: Config = {
       fontFamily: {
         sans: ['"Source Sans 3"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         serif: ['"Source Sans 3"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Cormorant Garamond"', 'ui-serif', 'Georgia', 'serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       maxWidth: {
