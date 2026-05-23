@@ -48,40 +48,87 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.target.outputs.BASE_PATH }}
         run: npm run build
 
-      # Bundled sub-sites (/experience, /rpg-skills) were pre-built with
-      # absolute basePaths assuming production deployment at the apex domain.
-      # On staging they actually live at <basePath>/<sub-site>/, so re-prefix
-      # their internal asset and link paths. kids-games and netflix-resume
-      # use relative paths and don't need this.
+      # Bundled sub-sites in public/ are pre-built with absolute paths that
+      # assume deployment at the apex domain (jameskocher.com/<sub-site>/).
+      # On staging they actually live at <basePath>/<sub-site>/, so every
+      # /<sub-site>/ reference in their HTML/JS/CSS needs a prefix.
+      #
+      # The list below is the SOURCE OF TRUTH. Any new bundled sub-site
+      # added to public/ MUST be appended here, or staging will silently
+      # serve broken assets. The verify step below catches this.
       - name: Re-prefix bundled sub-site paths for staging
         if: steps.target.outputs.BASE_PATH != ''
         env:
           PREFIX: ${{ steps.target.outputs.BASE_PATH }}
+          # Whitespace-separated list of bundled sub-site directories.
+          BUNDLES: 'experience kids-games netflix-resume rpg-skills'
         run: |
-          # /experience bundle
+          set -e
+          for B in $BUNDLES; do
+            [ -d "out/$B" ] || continue
+            echo "Prefixing /$B/ paths in out/$B …"
+            # Patch every HTML, JS, CSS, and txt file under the bundle.
+            # Cover the common path-delimiter contexts: " ' = ( (CSS url()).
+            find "out/$B" -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.txt' \) -exec sed -i \
+              -e "s|\"/$B/|\"$PREFIX/$B/|g" \
+              -e "s|'/$B/|'$PREFIX/$B/|g" \
+              -e "s|=/$B/|=$PREFIX/$B/|g" \
+              -e "s|(/$B/|($PREFIX/$B/|g" \
+              {} \;
+          done
+
+          # The /experience bundle additionally renders cross-bundle nav
+          # links that escape its basePath (apex logo + Contact). Patch
+          # those so they point at the staging-prefixed root.
           for f in out/experience/index.html out/experience/index.txt out/experience/404.html; do
-            if [ -f "$f" ]; then
-              sed -i \
-                -e "s|\"/experience/|\"$PREFIX/experience/|g" \
-                -e "s|=/experience/|=$PREFIX/experience/|g" \
-                -e "s|\"/contact/\"|\"$PREFIX/contact/\"|g" \
-                -e "s|\"/\"|\"$PREFIX/\"|g" \
-                "$f"
+            [ -f "$f" ] || continue
+            sed -i \
+              -e "s|\"/contact/\"|\"$PREFIX/contact/\"|g" \
+              -e "s|\"/\"|\"$PREFIX/\"|g" \
+              "$f"
+          done
+
+      # Defensive: scan every bundle for any /<sub-site>/ reference that
+      # is NOT prefixed with $PREFIX. If anything leaks through (e.g. a
+      # new bundle was added without updating the BUNDLES list above, or
+      # sed didn't cover a new path-delimiter context), fail the build
+      # rather than ship broken staging assets.
+      - name: Verify all bundled paths are prefixed
+        if: steps.target.outputs.BASE_PATH != ''
+        env:
+          PREFIX: ${{ steps.target.outputs.BASE_PATH }}
+        run: |
+          set -e
+          LEAKS=0
+          # Find every immediate child directory of out/ that has an index.html
+          # — these are the bundled sub-sites we need to validate.
+          for dir in out/*/; do
+            B=$(basename "$dir")
+            [ -f "${dir}index.html" ] || continue
+            # Skip _next (Next's own static output) and any directory whose
+            # name we expect to look like a top-level route (my-work, contact)
+            # since those are Next routes, not bundles.
+            case "$B" in _next|my-work|contact|404) continue ;; esac
+
+            # Look for ANY "/B/", '/B/', =/B/, or (/B/ that is NOT immediately
+            # preceded by the staging $PREFIX.
+            UNPREFIXED=$(grep -rEo --include='*.html' --include='*.js' --include='*.css' --include='*.txt' \
+              "[\"'=(]/$B/" "$dir" 2>/dev/null \
+              | grep -v "$PREFIX/$B/" \
+              | head -5 || true)
+            if [ -n "$UNPREFIXED" ]; then
+              echo "::error::Un-prefixed /$B/ paths leaked into the staging build:"
+              echo "$UNPREFIXED"
+              LEAKS=1
             fi
           done
-          # /rpg-skills bundle (Vite-built, paths like /rpg-skills/assets/...)
-          if [ -f out/rpg-skills/index.html ]; then
-            sed -i \
-              -e "s|\"/rpg-skills/|\"$PREFIX/rpg-skills/|g" \
-              -e "s|=/rpg-skills/|=$PREFIX/rpg-skills/|g" \
-              out/rpg-skills/index.html
+          if [ "$LEAKS" -ne 0 ]; then
+            echo
+            echo "Fix: add the bundle directory name to the BUNDLES env in the"
+            echo "'Re-prefix bundled sub-site paths' step above, then rerun."
+            exit 1
           fi
-          # Vite also references base path inside JS chunks — patch any
-          # occurrences of /rpg-skills/ in JS assets.
-          if [ -d out/rpg-skills/assets ]; then
-            find out/rpg-skills/assets -type f -name '*.js' -exec \
-              sed -i "s|\"/rpg-skills/|\"$PREFIX/rpg-skills/|g; s|'/rpg-skills/|'$PREFIX/rpg-skills/|g" {} \;
-          fi
+          echo "All bundled sub-site paths properly prefixed for staging."
 
       - name: Add .nojekyll
         run: touch out/.nojekyll
