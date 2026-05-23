@@ -48,15 +48,17 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.target.outputs.BASE_PATH }}
         run: npm run build
 
-      # The bundled /experience site was pre-built with basePath=/experience
-      # (correct for production at jameskocher.com/experience/). For staging
-      # deploys it actually lives at <basePath>/experience/, so prefix its
-      # internal asset and link paths.
-      - name: Re-prefix experience bundle paths for staging
+      # Bundled sub-sites (/experience, /rpg-skills) were pre-built with
+      # absolute basePaths assuming production deployment at the apex domain.
+      # On staging they actually live at <basePath>/<sub-site>/, so re-prefix
+      # their internal asset and link paths. kids-games and netflix-resume
+      # use relative paths and don't need this.
+      - name: Re-prefix bundled sub-site paths for staging
         if: steps.target.outputs.BASE_PATH != ''
         env:
           PREFIX: ${{ steps.target.outputs.BASE_PATH }}
         run: |
+          # /experience bundle
           for f in out/experience/index.html out/experience/index.txt out/experience/404.html; do
             if [ -f "$f" ]; then
               sed -i \
@@ -67,6 +69,19 @@ jobs:
                 "$f"
             fi
           done
+          # /rpg-skills bundle (Vite-built, paths like /rpg-skills/assets/...)
+          if [ -f out/rpg-skills/index.html ]; then
+            sed -i \
+              -e "s|\"/rpg-skills/|\"$PREFIX/rpg-skills/|g" \
+              -e "s|=/rpg-skills/|=$PREFIX/rpg-skills/|g" \
+              out/rpg-skills/index.html
+          fi
+          # Vite also references base path inside JS chunks — patch any
+          # occurrences of /rpg-skills/ in JS assets.
+          if [ -d out/rpg-skills/assets ]; then
+            find out/rpg-skills/assets -type f -name '*.js' -exec \
+              sed -i "s|\"/rpg-skills/|\"$PREFIX/rpg-skills/|g; s|'/rpg-skills/|'$PREFIX/rpg-skills/|g" {} \;
+          fi
 
       - name: Add .nojekyll
         run: touch out/.nojekyll
