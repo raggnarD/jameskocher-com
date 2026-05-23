@@ -2,6 +2,7 @@ import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import { profile } from '@/content/profile';
+import { asset } from '@/lib/asset';
 
 export const metadata = {
   title: 'Contact — James Kocher',
@@ -43,7 +44,7 @@ export default function ContactPage() {
               </li>
               <li>
                 <a
-                  href={profile.links.resume}
+                  href={asset(profile.links.resume)}
                   className="text-accent hover:underline"
                 >
                   Resume → jameskocher.com/experience

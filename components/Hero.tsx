@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { profile } from '@/content/profile';
 import { asset } from '@/lib/asset';
 
 type CatLink = { label: string; href: string; external?: boolean };
+
 
 const sections: { title: string; links: CatLink[] }[] = [
   {
@@ -36,14 +36,22 @@ const sections: { title: string; links: CatLink[] }[] = [
 function LinkPill({ link }: { link: CatLink }) {
   const cls =
     'font-sans text-brand text-sm font-bold uppercase tracking-[0.22em] hover:text-white transition-colors [text-shadow:0_1px_3px_rgb(0_0_0_/_0.7)]';
-  return link.external ? (
-    <a href={link.href} target="_blank" rel="noopener noreferrer" className={cls}>
+  if (link.external) {
+    return (
+      <a href={link.href} target="_blank" rel="noopener noreferrer" className={cls}>
+        {link.label}
+      </a>
+    );
+  }
+  // For both Next routes and bundled sub-sites, use a raw <a> with basePath
+  // prefix. Bundled paths MUST use raw <a> (Next's <Link> would try to fetch
+  // an RSC payload that doesn't exist); using raw <a> for Next routes too
+  // keeps the code simple at the cost of a full page navigation (cheap for
+  // a static site).
+  return (
+    <a href={asset(link.href)} className={cls}>
       {link.label}
     </a>
-  ) : (
-    <Link href={link.href} className={cls}>
-      {link.label}
-    </Link>
   );
 }
 
