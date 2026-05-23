@@ -28,7 +28,24 @@ jobs:
       - name: Install
         run: npm ci
 
+      # When no custom domain is set (no public/CNAME), the site is served at
+      # https://<user>.github.io/<repo>/ — set a basePath so internal asset
+      # paths resolve. When CNAME is present, build at root.
+      - name: Detect deploy target
+        id: target
+        run: |
+          if [ -f public/CNAME ]; then
+            echo "BASE_PATH=" >> $GITHUB_OUTPUT
+            echo "Building for custom domain (root path)."
+          else
+            REPO_NAME="${GITHUB_REPOSITORY#*/}"
+            echo "BASE_PATH=/$REPO_NAME" >> $GITHUB_OUTPUT
+            echo "Building for project-page URL (basePath=/$REPO_NAME)."
+          fi
+
       - name: Build
+        env:
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.target.outputs.BASE_PATH }}
         run: npm run build
 
       - name: Add .nojekyll
