@@ -48,6 +48,26 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.target.outputs.BASE_PATH }}
         run: npm run build
 
+      # The bundled /experience site was pre-built with basePath=/experience
+      # (correct for production at jameskocher.com/experience/). For staging
+      # deploys it actually lives at <basePath>/experience/, so prefix its
+      # internal asset and link paths.
+      - name: Re-prefix experience bundle paths for staging
+        if: steps.target.outputs.BASE_PATH != ''
+        env:
+          PREFIX: ${{ steps.target.outputs.BASE_PATH }}
+        run: |
+          for f in out/experience/index.html out/experience/index.txt out/experience/404.html; do
+            if [ -f "$f" ]; then
+              sed -i \
+                -e "s|\"/experience/|\"$PREFIX/experience/|g" \
+                -e "s|=/experience/|=$PREFIX/experience/|g" \
+                -e "s|\"/contact/\"|\"$PREFIX/contact/\"|g" \
+                -e "s|\"/\"|\"$PREFIX/\"|g" \
+                "$f"
+            fi
+          done
+
       - name: Add .nojekyll
         run: touch out/.nojekyll
 
