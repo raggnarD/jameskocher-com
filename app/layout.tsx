@@ -13,6 +13,21 @@ export const metadata: Metadata = {
     url: 'https://jameskocher.com',
     siteName: 'James Kocher',
     type: 'website',
+    images: [
+      {
+        url: '/assets/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Telluride mountain — James Kocher',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'James Kocher',
+    description:
+      'Product Manager and builder who cares about making great products with scale in mind.',
+    images: ['/assets/og-image.jpg'],
   },
 };
 
