@@ -134,6 +134,26 @@ function openModal(roleId) {
 
 function closeModal() {
     const modal = document.getElementById('roleModal');
+
+    // Stop any video/iframe playback before hiding. Just hiding the modal
+    // leaves the media element mounted and still playing audio.
+    const videoContainer = document.getElementById('modalVideo');
+    if (videoContainer) {
+        const video = videoContainer.querySelector('video');
+        if (video) {
+            try { video.pause(); } catch (e) {}
+            video.removeAttribute('src');
+            video.load(); // releases the buffer + audio output
+        }
+        const iframe = videoContainer.querySelector('iframe');
+        if (iframe) {
+            // Setting src to about:blank tears down the embedded player.
+            iframe.src = 'about:blank';
+        }
+        // Final belt-and-suspenders: drop the element entirely.
+        videoContainer.innerHTML = '';
+    }
+
     modal.classList.remove('active');
     document.body.style.overflow = 'auto';
 }
