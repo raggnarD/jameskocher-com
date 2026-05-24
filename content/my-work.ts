@@ -3,6 +3,7 @@ export type App = {
   blurb: string;
   scope: string;
   image: string;
+  icon?: string;
   link: { label: string; href: string };
 };
 
@@ -14,6 +15,7 @@ export const apps: App[] = [
     scope:
       'Shared Users, Linked Devices, Alexa Routines, Modes, Virtual Security Guard, and Video Monitoring.',
     image: '/assets/apps/ring.png',
+    icon: '/assets/apps/icons/ring.webp',
     link: {
       label: 'App Store',
       href: 'https://apps.apple.com/us/app/ring-always-home/id926252661',
@@ -25,6 +27,7 @@ export const apps: App[] = [
       'Spam call blocker that stops ~99% of unwanted calls using a 1.4B-call database.',
     scope: 'Lead Product Manager for the full rewrite and refactor of V5.',
     image: '/assets/apps/robokiller.png',
+    icon: '/assets/apps/icons/robokiller.webp',
     link: {
       label: 'App Store',
       href: 'https://apps.apple.com/us/app/robokiller-spam-call-blocker/id1022831885',
@@ -36,6 +39,7 @@ export const apps: App[] = [
       'Spam text-message blocker that eliminates ~99% of unwanted messages.',
     scope: 'Lead Designer and Product Manager for the 0-to-1 launch.',
     image: '/assets/apps/textkiller.png',
+    icon: '/assets/apps/icons/textkiller.webp',
     link: {
       label: 'App Store',
       href: 'https://apps.apple.com/us/app/textkiller-spam-text-blocker/id1514005355',
@@ -47,6 +51,7 @@ export const apps: App[] = [
       'Second phone number app with spam protection and a privacy-focused design.',
     scope: 'Lead Product Manager for a 0-to-1 new product.',
     image: '/assets/apps/switchup.png',
+    icon: '/assets/apps/icons/switchup.webp',
     link: {
       label: 'App Store',
       href: 'https://apps.apple.com/us/app/switchup-second-phone-number/id1527598796',
@@ -58,6 +63,7 @@ export const apps: App[] = [
       'MyLocusEnergy mobile app and LocusNOC web dashboard for solar PV system monitoring and analytics.',
     scope: 'Product Manager across mobile and web.',
     image: '/assets/apps/locusnoc.png',
+    icon: '/assets/apps/icons/locusnoc.png',
     link: {
       label: 'AppAdvice',
       href: 'https://appadvice.com/app/mylocusenergy/1389547007',

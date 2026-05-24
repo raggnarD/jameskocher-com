@@ -47,9 +47,19 @@ export default function MyWorkPage() {
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="font-serif text-xl text-ink-900 tracking-tight mb-2">
-                    {a.name}
-                  </h3>
+                  <div className="flex items-center gap-3 mb-2">
+                    {a.icon && (
+                      <img
+                        src={asset(a.icon)}
+                        alt=""
+                        aria-hidden="true"
+                        className="h-[27px] w-[27px] shrink-0 rounded-[22%] ring-1 ring-black/5"
+                      />
+                    )}
+                    <h3 className="font-serif text-xl text-ink-900 tracking-tight">
+                      {a.name}
+                    </h3>
+                  </div>
                   <p className="text-[15px] leading-relaxed text-ink-700 mb-3">
                     {a.blurb}
                   </p>
