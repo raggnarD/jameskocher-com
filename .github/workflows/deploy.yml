@@ -61,7 +61,7 @@ jobs:
         env:
           PREFIX: ${{ steps.target.outputs.BASE_PATH }}
           # Whitespace-separated list of bundled sub-site directories.
-          BUNDLES: 'experience kids-games netflix-resume rpg-skills'
+          BUNDLES: 'kids-games netflix-resume rpg-skills'
         run: |
           set -e
           for B in $BUNDLES; do
@@ -75,17 +75,6 @@ jobs:
               -e "s|=/$B/|=$PREFIX/$B/|g" \
               -e "s|(/$B/|($PREFIX/$B/|g" \
               {} \;
-          done
-
-          # The /experience bundle additionally renders cross-bundle nav
-          # links that escape its basePath (apex logo + Contact). Patch
-          # those so they point at the staging-prefixed root.
-          for f in out/experience/index.html out/experience/index.txt out/experience/404.html; do
-            [ -f "$f" ] || continue
-            sed -i \
-              -e "s|\"/contact/\"|\"$PREFIX/contact/\"|g" \
-              -e "s|\"/\"|\"$PREFIX/\"|g" \
-              "$f"
           done
 
       # Defensive: scan every bundle for any /<sub-site>/ reference that

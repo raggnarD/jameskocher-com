@@ -19,8 +19,6 @@ const nextConfig = {
     ? {
         async rewrites() {
           return [
-            { source: '/experience', destination: '/experience/index.html' },
-            { source: '/experience/', destination: '/experience/index.html' },
             { source: '/kids-games', destination: '/kids-games/index.html' },
             { source: '/kids-games/', destination: '/kids-games/index.html' },
             {
