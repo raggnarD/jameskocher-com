@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WillFall: Space Math Adventure</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🚀 WillFall 🪨</h1>
+            <p class="subtitle">Pilot through the asteroid belt — solve math to refuel and survive!</p>
+            <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
+        </header>
+
+        <div id="startScreen" class="overlay-screen">
+            <div class="overlay-card">
+                <h2>🚀 Ready for Launch?</h2>
+                <p>Fly as far as you can. Dodge asteroids. Solve math problems for gas and shield repairs.</p>
+                <div class="control-hints">
+                    <div><span class="key">↑ ↓ ← →</span> or <span class="key">W A S D</span> to fly</div>
+                    <div>Hold two keys to fly diagonally</div>
+                    <div>Hold <span class="key">→</span> or <span class="key">D</span> to thrust forward (uses gas)</div>
+                </div>
+
+                <div class="grade-picker">
+                    <label>Pick your math grade:</label>
+                    <div class="grade-buttons" id="gradeButtons">
+                        <button class="grade-btn" data-grade="K">K</button>
+                        <button class="grade-btn" data-grade="1">1st</button>
+                        <button class="grade-btn" data-grade="2">2nd</button>
+                        <button class="grade-btn selected" data-grade="3">3rd</button>
+                        <button class="grade-btn" data-grade="4">4th</button>
+                        <button class="grade-btn" data-grade="5">5th</button>
+                    </div>
+                </div>
+
+                <button class="btn-primary big" id="startBtn">🚀 Launch!</button>
+
+                <div class="high-scores">
+                    <h3>🏆 Top Pilots <span class="hs-mode-badge" id="hsModeBadgeStart"></span></h3>
+                    <div class="hs-tabs" id="hsTabsStart">
+                        <button class="hs-tab active" data-scope="global">🌐 Global</button>
+                        <button class="hs-tab" data-scope="K">K</button>
+                        <button class="hs-tab" data-scope="1">1st</button>
+                        <button class="hs-tab" data-scope="2">2nd</button>
+                        <button class="hs-tab" data-scope="3">3rd</button>
+                        <button class="hs-tab" data-scope="4">4th</button>
+                        <button class="hs-tab" data-scope="5">5th</button>
+                    </div>
+                    <ol id="highScoreList"><li class="empty">Loading…</li></ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="hud">
+                <div class="hud-item">
+                    <div class="hud-label">Distance</div>
+                    <div class="hud-value" id="distanceDisplay">0 mi</div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">Tier</div>
+                    <div class="hud-value" id="tierDisplay">🪨 Rock</div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">Shields</div>
+                    <div class="hud-value" id="shieldDisplay">🛡️🛡️🛡️🛡️🛡️</div>
+                </div>
+                <div class="hud-item gas">
+                    <div class="hud-label">Gas</div>
+                    <div class="gas-bar"><div class="gas-bar-fill" id="gasFill"></div></div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">Best</div>
+                    <div class="hud-value" id="bestDisplay">0 mi</div>
+                </div>
+            </div>
+
+            <div class="canvas-wrap">
+                <canvas id="gameCanvas" width="960" height="540"></canvas>
+            </div>
+
+            <div class="footer-hint">
+                ➡️ Hold right to thrust • 🪨 Dodge asteroids • ⛽ Math problem appears when you run out of gas or take a hit
+            </div>
+        </div>
+
+        <div id="mathModal" class="overlay-screen hidden">
+            <div class="overlay-card math-card">
+                <div class="math-reason" id="mathReason">⛽ Out of gas!</div>
+                <h2 class="math-question" id="mathQuestion">2 + 2 = ?</h2>
+                <input type="number" id="mathAnswer" class="math-input" autocomplete="off">
+                <div class="math-controls">
+                    <button class="btn-primary" id="mathSubmit">Submit</button>
+                </div>
+                <div class="math-feedback" id="mathFeedback"></div>
+            </div>
+        </div>
+
+        <div id="gameOverScreen" class="overlay-screen hidden">
+            <div class="overlay-card">
+                <h2>💥 Game Over</h2>
+                <p>You traveled <span id="finalDistance" class="big-num">0</span> miles.</p>
+                <p>Tier reached: <span id="finalTier">Rock</span></p>
+
+                <div id="highScoreEntry" class="high-score-entry hidden">
+                    <h3>🏆 New High Score!</h3>
+                    <label>Enter your initials:</label>
+                    <input type="text" id="initialsInput" maxlength="3" autocomplete="off" spellcheck="false">
+                    <button class="btn-primary" id="saveScoreBtn">Save Score</button>
+                    <div class="initials-feedback" id="initialsFeedback"></div>
+                </div>
+
+                <div class="game-over-actions">
+                    <button class="btn-primary" id="playAgainBtn">Play Again</button>
+                    <button class="btn-secondary" onclick="window.location.href='../index.html'">Back to Menu</button>
+                </div>
+
+                <div class="high-scores">
+                    <h3>🏆 Top Pilots <span class="hs-mode-badge" id="hsModeBadgeEnd"></span></h3>
+                    <div class="hs-tabs" id="hsTabsEnd">
+                        <button class="hs-tab" data-scope="global">🌐 Global</button>
+                        <button class="hs-tab" data-scope="K">K</button>
+                        <button class="hs-tab" data-scope="1">1st</button>
+                        <button class="hs-tab" data-scope="2">2nd</button>
+                        <button class="hs-tab" data-scope="3">3rd</button>
+                        <button class="hs-tab" data-scope="4">4th</button>
+                        <button class="hs-tab" data-scope="5">5th</button>
+                    </div>
+                    <ol id="highScoreListEnd"><li class="empty">Loading…</li></ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scores-firestore.js"></script>
+    <script src="scores.js"></script>
+    <script src="math.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
