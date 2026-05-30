@@ -649,20 +649,26 @@ async function endGame() {
     document.getElementById('finalDistance').textContent = final.toLocaleString();
     document.getElementById('finalTier').textContent = tierAt(final).tier.name;
 
-    // Qualify check — warp users are excluded entirely
-    const qualifies = !state.cheated && await ScoreStore.qualifies(final, state.grade);
+    // Warp runs are excluded from the leaderboard; still fetch scores so they display
     const entry = document.getElementById('highScoreEntry');
-    if (qualifies && final > 0) {
-        entry.classList.remove('hidden');
-        document.getElementById('initialsInput').value = '';
-        document.getElementById('initialsFeedback').textContent = '';
-        setTimeout(() => document.getElementById('initialsInput').focus(), 100);
-    } else {
+    if (state.cheated || final === 0) {
         entry.classList.add('hidden');
+    } else {
+        const qualifies = await ScoreStore.qualifies(final, state.grade);
+        if (qualifies) {
+            entry.classList.remove('hidden');
+            document.getElementById('initialsInput').value = '';
+            document.getElementById('initialsFeedback').textContent = '';
+            setTimeout(() => document.getElementById('initialsInput').focus(), 100);
+        } else {
+            entry.classList.add('hidden');
+        }
     }
-    // Default end-screen tab to the player's grade
-    setActiveTab('hsTabsEnd', state.grade);
-    await renderHighScores('highScoreListEnd', state.grade);
+    // Warp runs default to global tab so there's always content to see;
+    // normal runs default to the player's own grade.
+    const endScope = state.cheated ? 'global' : state.grade;
+    setActiveTab('hsTabsEnd', endScope);
+    await renderHighScores('highScoreListEnd', endScope);
     updateModeBadges();
     document.getElementById('gameOverScreen').classList.remove('hidden');
 }
