@@ -78,31 +78,36 @@ function initStars() {
     }
 }
 
+// Each tier beyond Rock adds 10% to spawn rate, asteroid speed, and angular variance.
+// Rock(0)=1.0, Bronze(1)=1.10, Silver(2)=1.20, ..., Obsidian(9)=1.90.
+function difficultyMult(tierIndex) {
+    return 1 + 0.10 * tierIndex;
+}
+
 function spawnAsteroid(tierIndex) {
     const tier = TIERS[tierIndex];
-    const baseSpeed = 140 + tierIndex * 28;       // px/sec drift left
-    const speed = baseSpeed + Math.random() * 80;
+    const mult = difficultyMult(tierIndex);
+    const baseSpeed = 140 * mult;                              // px/sec drift left
+    const speed = baseSpeed + Math.random() * 80 * mult;       // variance also scales
     const radius = 14 + Math.random() * 22;
     state.asteroids.push({
         x: CANVAS_W + radius + 10,
         y: Math.random() * (CANVAS_H - 2 * radius) + radius,
         vx: -speed,
-        vy: (Math.random() - 0.5) * 30,
+        vy: (Math.random() - 0.5) * 30 * mult,                 // wider vy = more angles
         r: radius,
         color: tier.color,
         glow: tier.glow,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 1.5,
-        // jagged shape
         verts: Array.from({ length: 8 + Math.floor(Math.random() * 4) }, () => 0.75 + Math.random() * 0.4)
     });
 }
 
 function spawnIntervalMs(tierIndex) {
-    // Faster spawn at higher tiers
     const base = 1500;
-    const min = 380;
-    return Math.max(min, base - tierIndex * 130);
+    const min = 280;
+    return Math.max(min, Math.round(base / difficultyMult(tierIndex)));
 }
 
 // Main loop
