@@ -9,7 +9,7 @@
 <body>
     <div class="game-container">
         <header>
-            <h1>🚀 WillFall 🪨</h1>
+            <h1>🚀 <span class="title-gradient">WillFall</span> 🪨</h1>
             <p class="subtitle">Pilot through the asteroid belt — solve math to refuel and survive!</p>
             <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
         </header>
@@ -33,6 +33,28 @@
                         <button class="grade-btn selected" data-grade="3">3rd</button>
                         <button class="grade-btn" data-grade="4">4th</button>
                         <button class="grade-btn" data-grade="5">5th</button>
+                    </div>
+                </div>
+
+                <div class="ship-picker">
+                    <label>Pick your ship:</label>
+                    <div class="ship-buttons">
+                        <button class="ship-btn selected" data-skin="0">
+                            <canvas class="ship-preview" width="88" height="56"></canvas>
+                            <span>Viper</span>
+                        </button>
+                        <button class="ship-btn" data-skin="1">
+                            <canvas class="ship-preview" width="88" height="56"></canvas>
+                            <span>Falcon</span>
+                        </button>
+                        <button class="ship-btn" data-skin="2">
+                            <canvas class="ship-preview" width="88" height="56"></canvas>
+                            <span>Dart</span>
+                        </button>
+                        <button class="ship-btn" data-skin="3">
+                            <canvas class="ship-preview" width="88" height="56"></canvas>
+                            <span>Saucer</span>
+                        </button>
                     </div>
                 </div>
 
@@ -71,6 +93,7 @@
                 <div class="hud-item gas">
                     <div class="hud-label">Gas</div>
                     <div class="gas-bar"><div class="gas-bar-fill" id="gasFill"></div></div>
+                    <span id="gasWarning">⚠️ Low Fuel!</span>
                 </div>
                 <div class="hud-item">
                     <div class="hud-label">Best</div>

@@ -15,6 +15,145 @@ const SHIP_W = 56;
 const SHIP_H = 36;
 const SHIP_MOVE_PX_PER_SEC = 320;               // on-screen movement speed
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Ship skins — each exposes draw(ctx, thrusting) in local coords (origin = center)
+// ─────────────────────────────────────────────────────────────────────────────
+const SHIP_SKINS = [
+    // ── 0 · Viper ─────────────────────── sleek swept-wing fighter (blue) ──
+    {
+        name: 'Viper',
+        draw(c, thrusting) {
+            const W = SHIP_W, H = SHIP_H;
+            if (thrusting) {
+                const fl = 0.6 + Math.random() * 0.4;
+                const g = c.createLinearGradient(-W/2 - 18*fl, 0, -W/2, 0);
+                g.addColorStop(0, 'rgba(255,80,0,0)');
+                g.addColorStop(1, `rgba(255,180,0,${fl})`);
+                c.fillStyle = g;
+                c.beginPath();
+                c.moveTo(-W/2, -6); c.lineTo(-W/2 - 18*fl, 0); c.lineTo(-W/2, 6);
+                c.closePath(); c.fill();
+            }
+            c.fillStyle = '#dde6ff'; c.strokeStyle = '#7aa8ff'; c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(W/2, 0);
+            c.lineTo(-W/2+8, -H/2); c.lineTo(-W/2, -H/4);
+            c.lineTo(-W/2, H/4);    c.lineTo(-W/2+8, H/2);
+            c.closePath(); c.fill(); c.stroke();
+            c.fillStyle = '#7aa8ff';
+            c.beginPath(); c.ellipse(8, 0, 8, 5, 0, 0, Math.PI*2); c.fill();
+        }
+    },
+
+    // ── 1 · Falcon ──────────────────────── wide delta bomber (gold) ──
+    {
+        name: 'Falcon',
+        draw(c, thrusting) {
+            const W = SHIP_W, H = SHIP_H;
+            if (thrusting) {
+                const fl = 0.6 + Math.random() * 0.4;
+                for (const oy of [-H/4, H/4]) {
+                    const g = c.createLinearGradient(-W/2 - 13*fl, oy, -W/2, oy);
+                    g.addColorStop(0, 'rgba(255,120,0,0)');
+                    g.addColorStop(1, `rgba(255,220,60,${fl})`);
+                    c.fillStyle = g;
+                    c.beginPath();
+                    c.moveTo(-W/2, oy-4); c.lineTo(-W/2 - 13*fl, oy); c.lineTo(-W/2, oy+4);
+                    c.closePath(); c.fill();
+                }
+            }
+            c.fillStyle = '#ffe4b0'; c.strokeStyle = '#c07818'; c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(W/2, 0);
+            c.lineTo(0, -H/2);     c.lineTo(-W/2+4, -H/2);
+            c.lineTo(-W/2, -H/4);  c.lineTo(-W/2+10, -2);
+            c.lineTo(-W/2+10, 2);
+            c.lineTo(-W/2, H/4);   c.lineTo(-W/2+4, H/2);
+            c.lineTo(0, H/2);
+            c.closePath(); c.fill(); c.stroke();
+            // Cockpit
+            c.fillStyle = '#c07818';
+            c.beginPath(); c.ellipse(10, 0, 9, 4, 0, 0, Math.PI*2); c.fill();
+            // Engine pod outlines
+            c.strokeStyle = '#ffcc60'; c.lineWidth = 1.5;
+            for (const oy of [-H/4, H/4]) c.strokeRect(-W/2, oy-4, 10, 8);
+        }
+    },
+
+    // ── 2 · Dart ─────────────────── needle interceptor with tail fins (green) ──
+    {
+        name: 'Dart',
+        draw(c, thrusting) {
+            const W = SHIP_W, H = SHIP_H;
+            if (thrusting) {
+                const fl = 0.6 + Math.random() * 0.4;
+                const g = c.createLinearGradient(-W/2 - 22*fl, 0, -W/2, 0);
+                g.addColorStop(0, 'rgba(0,200,80,0)');
+                g.addColorStop(1, `rgba(120,255,180,${fl})`);
+                c.fillStyle = g;
+                c.beginPath();
+                c.moveTo(-W/2, -3); c.lineTo(-W/2 - 22*fl, 0); c.lineTo(-W/2, 3);
+                c.closePath(); c.fill();
+            }
+            c.fillStyle = '#b8ffd8'; c.strokeStyle = '#22aa66'; c.lineWidth = 2;
+            // Thin needle fuselage
+            c.beginPath();
+            c.moveTo(W/2, 0);
+            c.lineTo(W/4, -H/6);  c.lineTo(-W/4, -H/6);
+            c.lineTo(-W/2, 0);
+            c.lineTo(-W/4, H/6);  c.lineTo(W/4, H/6);
+            c.closePath(); c.fill(); c.stroke();
+            // Top stabiliser fin
+            c.beginPath();
+            c.moveTo(-8, -H/6); c.lineTo(-12, -H/2+4); c.lineTo(-16, -H/6);
+            c.closePath(); c.fill(); c.stroke();
+            // Bottom stabiliser fin (mirror)
+            c.beginPath();
+            c.moveTo(-8, H/6); c.lineTo(-12, H/2-4); c.lineTo(-16, H/6);
+            c.closePath(); c.fill(); c.stroke();
+            // Cockpit visor
+            c.fillStyle = '#22aa66';
+            c.beginPath(); c.ellipse(W/4+2, 0, 7, 3, 0, 0, Math.PI*2); c.fill();
+        }
+    },
+
+    // ── 3 · Saucer ─────────────────────── alien disc scout (purple) ──
+    {
+        name: 'Saucer',
+        draw(c, thrusting) {
+            const W = SHIP_W, H = SHIP_H;
+            if (thrusting) {
+                const fl = 0.6 + Math.random() * 0.4;
+                const g = c.createLinearGradient(-W/2 - 16*fl, 0, -W/2+4, 0);
+                g.addColorStop(0, 'rgba(140,0,255,0)');
+                g.addColorStop(1, `rgba(200,100,255,${fl})`);
+                c.fillStyle = g;
+                c.beginPath();
+                c.moveTo(-W/2+4, -7); c.lineTo(-W/2 - 16*fl, 0); c.lineTo(-W/2+4, 7);
+                c.closePath(); c.fill();
+            }
+            // Disc body
+            c.fillStyle = '#e0b0ff'; c.strokeStyle = '#8822cc'; c.lineWidth = 2;
+            c.beginPath(); c.ellipse(0, 0, W/2, H/3, 0, 0, Math.PI*2);
+            c.fill(); c.stroke();
+            // Underside rim detail
+            c.fillStyle = '#8822cc';
+            c.beginPath(); c.ellipse(0, H/3-3, W/2-4, 4, 0, 0, Math.PI); c.fill();
+            // Dome — upper half-ellipse
+            const domeCy = -H/3 + 4;
+            c.fillStyle = '#f0d8ff'; c.strokeStyle = '#8822cc';
+            c.beginPath();
+            c.ellipse(2, domeCy, W/4, H/3 - 2, 0, Math.PI, 0, false);
+            c.closePath(); c.fill(); c.stroke();
+            // Dome tint window
+            c.fillStyle = 'rgba(140,60,220,0.4)';
+            c.beginPath();
+            c.ellipse(2, domeCy, W/8, (H/3-2)*0.5, 0, Math.PI, 0, false);
+            c.closePath(); c.fill();
+        }
+    }
+];
+
 const TIERS = [
     { name: 'Rock',     miles: 0,       color: '#7d7d8a', glow: '#aaaaaa', emoji: '🪨' },
     { name: 'Bronze',   miles: 100000,  color: '#cd7f32', glow: '#e8a55c', emoji: '🟫' },
@@ -50,16 +189,41 @@ const state = {
     lastFrameTs: 0,
     mathPending: null,       // { reason: 'gas'|'hit', resume: fn, onWrong: fn }
     mathCurrent: null,
-    bestMiles: 0
+    bestMiles: 0,
+    shipSkin: 0,        // index into SHIP_SKINS — cosmetic only
+    cheated: false,     // true if warp easter egg used — disqualifies high score
+    warpEffect: 0       // countdown (seconds) for the warp flash animation
 };
 
 // Keys
 const keys = {};
+
+// Easter egg: type T-U-R-B-O during gameplay to warp to the next tier.
+// None of these letters overlap with WASD movement keys.
+// Using the warp disqualifies the run from the high-score leaderboard.
+const WARP_CODE = ['t','u','r','b','o'];
+let warpBuffer = [];
+
 window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     keys[k] = true;
     // Prevent page scroll for arrow keys + space when game running
     if (state.running && ['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+
+    // Warp easter egg — only active while playing (not paused for math)
+    if (state.running && !state.paused && /^[a-z]$/.test(k)) {
+        // WASD movement keys reset the buffer so normal flying never builds up a false match
+        if (['w','a','s','d'].includes(k)) {
+            warpBuffer = [];
+        } else {
+            warpBuffer.push(k);
+            if (warpBuffer.length > WARP_CODE.length) warpBuffer.shift();
+            if (warpBuffer.join('') === WARP_CODE.join('')) {
+                warpBuffer = [];
+                warpToNextTier();
+            }
+        }
+    }
 });
 window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
@@ -89,7 +253,7 @@ function spawnAsteroid(tierIndex) {
     const mult = difficultyMult(tierIndex);
     const baseSpeed = 140 * mult;                              // px/sec drift left
     const speed = baseSpeed + Math.random() * 80 * mult;       // variance also scales
-    const radius = 14 + Math.random() * 22;
+    const radius = 18 + Math.random() * (34 * Math.min(mult, 1.5));  // 18-52 px at Rock, scales with tier
     state.asteroids.push({
         x: CANVAS_W + radius + 10,
         y: Math.random() * (CANVAS_H - 2 * radius) + radius,
@@ -105,7 +269,7 @@ function spawnAsteroid(tierIndex) {
 }
 
 function spawnIntervalMs(tierIndex) {
-    const base = 1500;
+    const base = 800;   // Rock spawns every ~0.8 s; higher tiers get proportionally faster
     const min = 280;
     return Math.max(min, Math.round(base / difficultyMult(tierIndex)));
 }
@@ -121,9 +285,10 @@ function loop(ts) {
     requestAnimationFrame(loop);
 }
 
-// Idle drift keeps the field "alive" but lets the player breathe.
-// Boost zooms the world toward the static ship.
-const IDLE_SCROLL_RATE = 0.06;
+// Visual scroll rate during idle — high enough to look like the ship is coasting
+// through space. Decoupled from the score drip so the leaderboard doesn't inflate.
+const IDLE_SCROLL_RATE = 0.25;     // asteroids drift at ~50 px/s — visibly moving
+const IDLE_MILES_PER_SEC = 30;     // slow score drip while coasting
 const BOOST_SCROLL_RATE = 1.0;
 
 function update(dt) {
@@ -139,19 +304,20 @@ function update(dt) {
     state.ship.y += vy * SHIP_MOVE_PX_PER_SEC * dt;
     state.ship.y = Math.max(SHIP_H / 2, Math.min(CANVAS_H - SHIP_H / 2, state.ship.y));
 
-    // Forward thrust = miles + gas consumption (no ship x movement)
+    const scrollRate = thrusting ? BOOST_SCROLL_RATE : IDLE_SCROLL_RATE;
+
+    // Score: full 1000 mi/s while thrusting, gentle drip while coasting.
     if (thrusting) {
-        const traveled = SHIP_FORWARD_SPEED_MPS * dt;
-        state.miles += traveled;
-        state.gasMiles = Math.max(0, state.gasMiles - traveled);
+        state.miles += SHIP_FORWARD_SPEED_MPS * dt;
+        state.gasMiles = Math.max(0, state.gasMiles - SHIP_FORWARD_SPEED_MPS * dt);
         if (state.gasMiles === 0) {
             triggerGasMath();
         }
+    } else {
+        state.miles += IDLE_MILES_PER_SEC * dt;
     }
 
-    const scrollRate = thrusting ? BOOST_SCROLL_RATE : IDLE_SCROLL_RATE;
-
-    // Asteroids — speed scales with scroll rate so idle nearly stops them
+    // Asteroids — speed scales with scroll rate so idle drifts them slowly
     const { tier, index: tierIdx } = tierAt(state.miles);
     state.spawnTimer += dt * 1000;
     // Slow spawning when idle so the field doesn't pile up unfairly
@@ -168,8 +334,8 @@ function update(dt) {
     }
     state.asteroids = state.asteroids.filter(a => a.x + a.r > -10);
 
-    // Stars parallax
-    const starDrift = thrusting ? 80 : 4;
+    // Stars parallax — idle drift matches the visible scroll rate
+    const starDrift = thrusting ? 80 : 20;
     for (const s of state.stars) {
         s.x -= starDrift * s.z * dt;
         if (s.x < 0) { s.x = CANVAS_W; s.y = Math.random() * CANVAS_H; }
@@ -183,6 +349,7 @@ function update(dt) {
         }
     }
 
+    if (state.warpEffect > 0) state.warpEffect = Math.max(0, state.warpEffect - dt);
     updateHUD();
 }
 
@@ -202,6 +369,19 @@ function handleShipHit(asteroid) {
     flashCanvas('#ff6b6b');
     if (state.shields <= 0) { endGame(); return; }
     triggerHitMath();
+}
+
+function warpToNextTier() {
+    const { index } = tierAt(state.miles);
+    if (index >= TIERS.length - 1) return; // already at the last tier — nowhere to warp
+    const next = TIERS[index + 1];
+    state.miles = next.miles + 500;         // land just inside the next tier boundary
+    state.cheated = true;
+    state.warpEffect = 2.0;                 // seconds the animation plays
+    state.asteroids = [];                   // clear the field for a fresh start
+    state.gasMiles = TANK_MILES;            // refuel so you don't immediately run out
+    flashCanvas('#9966ff');
+    updateHUD();
 }
 
 function triggerGasMath() {
@@ -336,44 +516,59 @@ function draw() {
     ctx.textAlign = 'right';
     ctx.fillText(`${tier.emoji} ${tier.name} belt`, CANVAS_W - 12, 22);
     ctx.textAlign = 'left';
+
+    // Warp activated splash
+    if (state.warpEffect > 0) {
+        const alpha = Math.min(1, state.warpEffect);   // fades out over the last second
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 44px -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = '#c896ff';
+        ctx.fillText('⚡ WARP ACTIVATED ⚡', CANVAS_W / 2, CANVAS_H / 2 - 22);
+        ctx.font = '22px -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`Entering ${tier.emoji} ${tier.name} Belt`, CANVAS_W / 2, CANVAS_H / 2 + 18);
+        ctx.font = '14px -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = '#ff9966';
+        ctx.fillText('Score excluded from leaderboard', CANVAS_W / 2, CANVAS_H / 2 + 46);
+        ctx.textAlign = 'left';
+        ctx.restore();
+    }
+
+    // Persistent badge so the player always knows their run is off the books
+    if (state.cheated) {
+        ctx.save();
+        ctx.font = '12px -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(200,150,255,0.65)';
+        ctx.textAlign = 'right';
+        ctx.fillText('⚡ warp used — score excluded', CANVAS_W - 12, 44);
+        ctx.textAlign = 'left';
+        ctx.restore();
+    }
 }
 
 function drawShip(x, y, thrusting) {
     ctx.save();
     ctx.translate(x, y);
-    // Thrust flame
-    if (thrusting) {
-        const flicker = 0.6 + Math.random() * 0.4;
-        const grd = ctx.createLinearGradient(-SHIP_W / 2 - 18, 0, -SHIP_W / 2, 0);
-        grd.addColorStop(0, 'rgba(255,80,0,0)');
-        grd.addColorStop(1, `rgba(255,180,0,${flicker})`);
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.moveTo(-SHIP_W / 2, -6);
-        ctx.lineTo(-SHIP_W / 2 - 18 * flicker, 0);
-        ctx.lineTo(-SHIP_W / 2, 6);
-        ctx.closePath();
-        ctx.fill();
-    }
-    // Body
-    ctx.fillStyle = '#dde6ff';
-    ctx.strokeStyle = '#7aa8ff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(SHIP_W / 2, 0);
-    ctx.lineTo(-SHIP_W / 2 + 8, -SHIP_H / 2);
-    ctx.lineTo(-SHIP_W / 2, -SHIP_H / 4);
-    ctx.lineTo(-SHIP_W / 2, SHIP_H / 4);
-    ctx.lineTo(-SHIP_W / 2 + 8, SHIP_H / 2);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    // Cockpit
-    ctx.fillStyle = '#7aa8ff';
-    ctx.beginPath();
-    ctx.ellipse(8, 0, 8, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
+    SHIP_SKINS[state.shipSkin].draw(ctx, thrusting);
     ctx.restore();
+}
+
+// Render static ship previews into each skin-picker button canvas
+function renderShipPreviews() {
+    document.querySelectorAll('.ship-btn').forEach(btn => {
+        const idx = Number(btn.dataset.skin);
+        const pCanvas = btn.querySelector('canvas');
+        if (!pCanvas) return;
+        const pCtx = pCanvas.getContext('2d');
+        pCtx.fillStyle = '#08081a';
+        pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
+        pCtx.save();
+        pCtx.translate(pCanvas.width / 2, pCanvas.height / 2);
+        SHIP_SKINS[idx].draw(pCtx, false);
+        pCtx.restore();
+    });
 }
 
 function drawAsteroid(a) {
@@ -414,7 +609,13 @@ function updateHUD() {
     const { tier } = tierAt(state.miles);
     document.getElementById('tierDisplay').textContent = `${tier.emoji} ${tier.name}`;
     document.getElementById('shieldDisplay').textContent = '🛡️'.repeat(state.shields) + '🖤'.repeat(MAX_SHIELDS - state.shields);
-    document.getElementById('gasFill').style.width = `${(state.gasMiles / TANK_MILES) * 100}%`;
+    const gasPercent = state.gasMiles / TANK_MILES;
+    const gasFill = document.getElementById('gasFill');
+    const gasWarning = document.getElementById('gasWarning');
+    gasFill.style.width = `${gasPercent * 100}%`;
+    const lowGas = gasPercent < 0.05;
+    gasFill.classList.toggle('gas-low', lowGas);
+    gasWarning.classList.toggle('visible', lowGas);
     document.getElementById('bestDisplay').textContent = `${Math.floor(state.bestMiles).toLocaleString()} mi`;
 }
 
@@ -430,6 +631,9 @@ async function startGame() {
     state.asteroids = [];
     state.spawnTimer = 0;
     state.lastFrameTs = 0;
+    state.cheated = false;
+    state.warpEffect = 0;
+    warpBuffer = [];
     initStars();
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.add('hidden');
@@ -445,8 +649,8 @@ async function endGame() {
     document.getElementById('finalDistance').textContent = final.toLocaleString();
     document.getElementById('finalTier').textContent = tierAt(final).tier.name;
 
-    // Qualify check against the player's own grade — that's the board they care about
-    const qualifies = await ScoreStore.qualifies(final, state.grade);
+    // Qualify check — warp users are excluded entirely
+    const qualifies = !state.cheated && await ScoreStore.qualifies(final, state.grade);
     const entry = document.getElementById('highScoreEntry');
     if (qualifies && final > 0) {
         entry.classList.remove('hidden');
@@ -483,14 +687,16 @@ async function renderHighScores(elId, scope = 'global') {
         ul.innerHTML = '<li class="empty">No scores yet — be the first!</li>';
         return;
     }
-    ul.innerHTML = scores.map(s => `
-        <li>
+    ul.innerHTML = scores.map(s => {
+        const { tier } = tierAt(s.distance);
+        return `<li>
             <span class="score-initials">${escapeHTML(s.initials)}</span>
             ${scope === 'global' ? `<span class="score-grade">Gr ${escapeHTML(s.grade)}</span>` : ''}
+            <span class="score-tier" title="${tier.name}">${tier.emoji}</span>
             <span class="score-distance">${s.distance.toLocaleString()} mi</span>
             <span class="score-ts">${formatAgo(s.ts)}</span>
-        </li>
-    `).join('');
+        </li>`;
+    }).join('');
 }
 
 function setActiveTab(tabsId, scope) {
@@ -517,6 +723,14 @@ document.querySelectorAll('.grade-btn').forEach(btn => {
         document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         state.grade = btn.dataset.grade;
+    });
+});
+
+document.querySelectorAll('.ship-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.ship-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.shipSkin = Number(btn.dataset.skin);
     });
 });
 
@@ -569,5 +783,6 @@ wireTabs('hsTabsEnd', 'highScoreListEnd');
     updateModeBadges();
 })();
 initStars();
+renderShipPreviews();
 updateHUD();
 requestAnimationFrame(loop);

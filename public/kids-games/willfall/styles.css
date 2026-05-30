@@ -22,6 +22,9 @@ header {
 
 header h1 {
     font-size: 2.4rem;
+}
+
+header h1 .title-gradient {
     background: linear-gradient(90deg, #7aa8ff 0%, #c896ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -79,6 +82,28 @@ header h1 {
     width: 100%;
     transition: width 0.1s linear;
 }
+
+@keyframes gasPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.25; }
+}
+
+.gas-bar-fill.gas-low {
+    background: linear-gradient(90deg, #ff3b3b 0%, #ff8c00 100%);
+    animation: gasPulse 0.65s ease-in-out infinite;
+}
+
+#gasWarning {
+    display: none;
+    color: #ff6b6b;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-top: 4px;
+    letter-spacing: 0.03em;
+    animation: gasPulse 0.65s ease-in-out infinite;
+}
+
+#gasWarning.visible { display: block; }
 
 .canvas-wrap {
     border-radius: 12px;
@@ -153,6 +178,43 @@ header h1 {
 
 .grade-picker { margin: 20px 0; }
 .grade-picker label { display: block; margin-bottom: 8px; color: #b0b0d0; }
+
+.ship-picker { margin: 20px 0; }
+.ship-picker label { display: block; margin-bottom: 8px; color: #b0b0d0; }
+
+.ship-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.ship-btn {
+    background: rgba(255,255,255,0.05);
+    color: #e0e0ff;
+    border: 2px solid rgba(255,255,255,0.12);
+    padding: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.ship-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+
+.ship-btn.selected {
+    border-color: #7aa8ff;
+    background: rgba(122, 168, 255, 0.15);
+}
+
+.ship-preview {
+    display: block;
+    border-radius: 6px;
+}
 
 .grade-buttons {
     display: flex;
@@ -248,7 +310,8 @@ header h1 {
 #highScoreList li.empty::before, #highScoreListEnd li.empty::before { content: ''; min-width: 0; }
 
 .score-initials { font-weight: 700; font-family: monospace; }
-.score-distance { margin-left: auto; color: #b0b0d0; }
+.score-tier { font-size: 1rem; margin-left: auto; }
+.score-distance { color: #b0b0d0; }
 .score-grade { font-size: 0.8rem; color: #8888bb; }
 .score-ts { font-size: 0.75rem; color: #6e6e9a; min-width: 4.5em; text-align: right; }
 
