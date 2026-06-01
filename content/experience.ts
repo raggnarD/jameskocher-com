@@ -340,7 +340,7 @@ export const aiProjects: AIProject[] = [
     id: 'pocs',
     title: 'Production proof-of-concepts',
     badge: { text: 'POC', style: 'neutral' },
-    body: 'Multiple Claude Code– and Cursor–built proof-of-concept features merged into production codebases.',
+    body: 'Multiple Claude Code and Cursor built proof-of-concept features merged into production codebases.',
   },
 ];
 
