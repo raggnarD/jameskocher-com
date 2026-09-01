@@ -412,7 +412,7 @@ function showFeedback(message, type) {
     }, 2000);
 }
 
-// Start score timer (decreases score by 20 every second)
+// Start score timer (decreases score by 10 every second)
 // Only runs when there's an active currentWord
 function startScoreTimer() {
     // Stop any existing timer first
@@ -422,7 +422,7 @@ function startScoreTimer() {
     gameState.scoreTimer = setInterval(() => {
         // Only decrease score if there's an active word and game isn't won
         if (gameState.currentWord && !gameState.gameWon) {
-            gameState.score = Math.max(0, gameState.score - 20);
+            gameState.score = Math.max(0, gameState.score - 10);
             updateDisplay();
         }
     }, 1000);
