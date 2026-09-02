@@ -487,7 +487,7 @@ header h1 .title-gradient {
 .hud.hidden,
 .footer-hint.hidden { display: none; }
 
-#planetHud { grid-template-columns: 1fr 1fr 1fr 2.2fr; }
+#planetHud { grid-template-columns: 1fr 1fr 2.4fr; }
 
 .hud-item.resources {
     flex: 1 1 auto;

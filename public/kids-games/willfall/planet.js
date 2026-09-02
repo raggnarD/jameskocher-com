@@ -22,7 +22,10 @@ const SEG_W = 110;             // terrain node spacing (world px)
 const HIT_INVULN = 1.5;        // seconds of mercy after an alien hit
 const HIT_DROP   = 3;          // units lost from the most-held resource
 
+const SCROLL_RAMP = 1.1;       // seconds for the surface "treadmill" to spin up
+const MAN_START_X = 0.30;      // fraction of canvas width the spaceman lands at
 const TRANSITION_DUR = 2.6;    // seconds for descend / ascend
+const ASCENT_CLIMB = 0.62;     // fraction of the ascent spent climbing off-world
 
 // ── Resource table — derived from TIERS so the two can never drift ───────────
 function resourceFor(tierIndex) {
@@ -55,6 +58,14 @@ function shade(hex, amt) {
     return `rgb(${ch[0]},${ch[1]},${ch[2]})`;
 }
 
+function greyOf(hex, lift = 0) {
+    // Desaturate to luminance — knocked-loose resources read as dead rock.
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const l = Math.max(0, Math.min(255, Math.round(0.299 * r + 0.587 * g + 0.114 * b) + lift * 255));
+    return `rgb(${l},${l},${l})`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // World generation
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,16 +82,20 @@ function generatePlanet(tierIndex) {
         collected: Object.fromEntries(types.map(i => [i, 0])),
         required: REQUIRED_PER_RESOURCE,
         scrollX: 0,
+        speed: 0,                  // current scroll speed — eased up from a standstill
+        rampT: 0,                  // seconds the surface stage has been running
         nodes: [],                 // terrain: { wx, y }
         items: [],                 // { wx, y, r, type, spin }
         aliens: [],                // { wx, y, vy, w, h, kind, phase, speed }
+        debris: [],                // greyed-out shards of resources knocked loose
         nextItemX: 420,
         nextAlienX: 700,
         alienSpeed: 90 * mult,
         alienGap: [260, 480],
         itemGap: [150, 260],
-        man: { wx: 150, y: 0, vy: 0, onGround: false, face: 1, walk: 0, invuln: 0, hidden: false },
-        rocketWX: 60,
+        man: { wx: CANVAS_W * MAN_START_X, y: 0, vy: 0, onGround: true, face: 1, walk: 0, invuln: 0, hidden: false },
+        rocketWX: CANVAS_W * MAN_START_X - 95,
+        launchWX: null,            // where the rocket lifts off from
         rocketLanded: true,        // drawn on the surface until it scrolls away
         basePadWX: null,
         baseBuilt: false,
@@ -131,16 +146,19 @@ function updatePlanet(dt) {
 
     if (p.banner > 0) p.banner = Math.max(0, p.banner - dt);
 
-    // Base assembly animation, then launch
+    // Base assembly animation, then launch. The world holds still so the base
+    // and the spaceman stay put under the camera while it goes up.
     if (p.building > 0) {
         p.building = Math.max(0, p.building - dt);
         if (p.building === 0) { finishPlanet(); return; }
-        p.scrollX += PLANET_SCROLL * 0.15 * dt;
         updatePlanetHUD();
         return;
     }
 
-    p.scrollX += PLANET_SCROLL * dt;
+    // Ease the treadmill up from a standstill instead of snapping to full speed
+    p.rampT = Math.min(SCROLL_RAMP, p.rampT + dt);
+    p.speed = PLANET_SCROLL * easeInOutCubic(p.rampT / SCROLL_RAMP);
+    p.scrollX += p.speed * dt;
 
     // Keep terrain generated ahead and trim what scrolled past
     while (p.nodes[p.nodes.length - 1].wx < p.scrollX + CANVAS_W + SEG_W * 2) extendTerrain(p);
@@ -150,6 +168,7 @@ function updatePlanet(dt) {
     spawnPlanetContent(p);
     updateItems(p, dt);
     updateAliens(p, dt);
+    updateDebris(p, dt);
     updateBasePad(p);
     updatePlanetHUD();
 }
@@ -165,7 +184,7 @@ function updateSpaceman(p, dt) {
     if (right) dir += 1;
     if (dir !== 0) m.face = dir;
 
-    m.wx += (PLANET_SCROLL + dir * MAN_NUDGE) * dt;
+    m.wx += (p.speed + dir * MAN_NUDGE) * dt;
     // Stay inside the visible window — the world scrolls, he doesn't run off it
     const minWX = p.scrollX + CANVAS_W * MAN_X_MIN;
     const maxWX = p.scrollX + CANVAS_W * MAN_X_MAX;
@@ -190,7 +209,7 @@ function updateSpaceman(p, dt) {
         m.onGround = false;
     }
 
-    m.walk += (m.onGround ? (PLANET_SCROLL + Math.abs(dir) * MAN_NUDGE) : 0) * dt * 0.045;
+    m.walk += (m.onGround ? (p.speed + Math.abs(dir) * MAN_NUDGE) : 0) * dt * 0.045;
     if (m.invuln > 0) m.invuln = Math.max(0, m.invuln - dt);
 }
 
@@ -286,7 +305,54 @@ function hitByAlien(p) {
         const lost = Math.min(HIT_DROP, p.collected[worst]);
         p.collected[worst] -= lost;
         state.bonusMiles = Math.max(0, state.bonusMiles - lost * BONUS_PER_RESOURCE);
+        spawnDebris(p, worst, lost);
     }
+}
+
+// One full-size cracked chunk per unit lost, plus a couple of small shards, so
+// the player can read both which resource went and how much of it.
+function spawnDebris(p, type, lost) {
+    for (let i = 0; i < lost; i++) {
+        const spread = (i - (lost - 1) / 2) * 26;
+        push(11, -300 - Math.random() * 90, spread, true);
+        push(4 + Math.random() * 3, -230 - Math.random() * 140, spread, false);
+        push(4 + Math.random() * 3, -230 - Math.random() * 140, spread, false);
+    }
+
+    function push(r, vy, spread, chunk) {
+        p.debris.push({
+            wx: p.man.wx + spread * 0.35 + (Math.random() - 0.5) * 14,
+            y: p.man.y - 6 + (Math.random() - 0.5) * 16,
+            vx: spread + (Math.random() - 0.5) * 150,
+            vy,
+            r,
+            chunk,
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 11,
+            life: 1.9,
+            maxLife: 1.9,
+            type
+        });
+    }
+}
+
+function updateDebris(p, dt) {
+    for (const d of p.debris) {
+        d.vy += PLANET_GRAVITY * 0.6 * dt;
+        d.wx += d.vx * dt;
+        d.y += d.vy * dt;
+        d.rot += d.rotSpeed * dt;
+        const g = groundYAt(p, d.wx) - d.r;
+        if (d.y > g) {                      // bounce, then settle
+            d.y = g;
+            d.vy *= -0.32;
+            d.vx *= 0.55;
+            d.rotSpeed *= 0.55;
+        }
+        d.life -= dt;
+    }
+    // Purely decorative — never picked up, and gone once they fade or scroll off
+    p.debris = p.debris.filter(d => d.life > 0 && d.wx > p.scrollX - 60);
 }
 
 function quotaMet(p) {
@@ -347,7 +413,12 @@ function startDescent() {
 }
 
 function startAscent() {
-    if (state.planet) state.planet.man.hidden = true;
+    const p = state.planet;
+    if (p) {
+        p.man.hidden = true;          // he's aboard now
+        p.rocketLanded = false;       // the launch draws its own rocket
+        p.launchWX = p.basePadWX !== null ? p.basePadWX - 78 : p.man.wx;
+    }
     state.phase = 'ascend';
     state.transition = { kind: 'ascend', t: 0, dur: TRANSITION_DUR };
 }
@@ -356,7 +427,6 @@ function updateTransition(dt) {
     const tr = state.transition;
     if (!tr) return;
     tr.t += dt;
-    if (state.planet) state.planet.scrollX += PLANET_SCROLL * 0.25 * dt;
     if (tr.t < tr.dur) return;
 
     if (tr.kind === 'descend') {
@@ -400,8 +470,6 @@ function updatePlanetHUD() {
     const p = state.planet;
     if (!p) return;
     document.getElementById('planetNameDisplay').textContent = `${p.tier.emoji} ${p.tier.name}`;
-    document.getElementById('planetShieldDisplay').textContent =
-        '🛡️'.repeat(state.shields) + '🖤'.repeat(MAX_SHIELDS - state.shields);
     document.getElementById('planetBonusDisplay').textContent =
         `+${Math.floor(state.bonusMiles).toLocaleString()} mi`;
 
@@ -449,6 +517,7 @@ function drawPlanetScene() {
     drawHills(p);
     drawTerrain(p);
     if (p.basePadWX !== null) drawBasePad(p);
+    for (const d of p.debris) drawDebris(p, d);
     for (const it of p.items) drawResource(p, it);
     for (const a of p.aliens) drawAlien(p, a);
     if (p.rocketLanded) drawLandedRocket(p, p.rocketWX);
@@ -523,6 +592,46 @@ function drawResource(p, it) {
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
     }
     ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+}
+
+function drawDebris(p, d) {
+    const x = d.wx - p.scrollX;
+    if (x < -40 || x > CANVAS_W + 40) return;
+    const fade = Math.min(1, d.life / (d.maxLife * 0.45));
+    const base = greyOf(TIERS[d.type].color, -0.22);   // duller than a live resource, and no glow
+
+    ctx.save();
+    ctx.globalAlpha = fade * sceneAlpha * 0.9;
+    ctx.translate(x, d.y);
+    ctx.rotate(d.rot);
+    ctx.fillStyle = base;
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 1.5;
+
+    if (d.chunk) {
+        // A whole unit, cracked down the middle — the halves drift apart as it fades
+        const gap = 2 + (1 - fade) * 5;
+        const r = d.r;
+        for (const side of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(side * gap, -r);
+            ctx.lineTo(side * (gap + r * 0.95), -r * 0.25);
+            ctx.lineTo(side * (gap + r * 0.75), r * 0.7);
+            ctx.lineTo(side * gap, r);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(-d.r, d.r * 0.6);
+        ctx.lineTo(0, -d.r);
+        ctx.lineTo(d.r, d.r * 0.4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
     ctx.restore();
 }
 
@@ -747,36 +856,62 @@ function drawTransition() {
         }
         bannerText('Approaching ' + TIERS[state.beltIndex].name + ' Planet', 1 - k * 0.6);
     } else {
-        // Ascent — surface falls away beneath a climbing rocket
-        if (p) {
-            ctx.save();
-            ctx.translate(0, k * CANVAS_H * 0.9);
-            drawPlanetScene();
-            ctx.restore();
-            ctx.globalAlpha = Math.min(1, k * 1.4);
-            ctx.fillStyle = '#02020a';
-            ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = '#ffffff';
-            for (const s of state.stars) {
-                ctx.globalAlpha = s.z * Math.min(1, k * 1.6);
-                ctx.fillRect(s.x, s.y, s.size, s.size);
-            }
-            ctx.globalAlpha = 1;
-            const rx = CANVAS_W * 0.5;
-            const ry = CANVAS_H * 0.8 - k * CANVAS_H * 0.55;
-            ctx.save();
-            ctx.translate(rx, ry);
-            ctx.rotate(-Math.PI / 2 + k * Math.PI / 2);
-            ctx.scale(1 - 0.25 * k, 1 - 0.25 * k);
-            SHIP_SKINS[state.shipSkin].draw(ctx, true);
-            ctx.restore();
-        }
-        const nextName = state.beltIndex >= TIERS.length - 1
-            ? 'Mission complete'
-            : `Next stop: ${TIERS[state.beltIndex + 1].name} belt`;
-        bannerText(nextName, Math.min(1, k * 1.5));
+        drawAscent(tr, p);
     }
+}
+
+// Ascent — the camera rides the rocket up off the surface, then eases it into
+// the pose the belt stage starts in, so the hand-off has no visible cut.
+function drawAscent(tr, p) {
+    const climbT = Math.min(1, tr.t / (tr.dur * ASCENT_CLIMB));
+    const climb = easeInOutCubic(climbT);
+    const exit = easeInOutCubic(
+        Math.max(0, Math.min(1, (tr.t - tr.dur * ASCENT_CLIMB) / (tr.dur * (1 - ASCENT_CLIMB))))
+    );
+
+    // Space first — the surface is painted over it and fades as we climb
+    ctx.fillStyle = '#02020a';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.fillStyle = '#ffffff';
+    for (const st of state.stars) {
+        ctx.globalAlpha = st.z * Math.min(1, climb * 1.5 + exit);
+        ctx.fillRect(st.x, st.y, st.size, st.size);
+    }
+    ctx.globalAlpha = 1;
+
+    let rocketX = CANVAS_W * 0.5, rocketY = CANVAS_H * 0.55;
+    if (p) {
+        const padWX = p.launchWX !== null ? p.launchWX : p.man.wx;
+        const groundY = groundYAt(p, padWX);
+        const worldY = groundY - 34 - climb * CANVAS_H * 2.1;
+        // Camera holds the rocket at 55% height once it has risen that far
+        const camY = Math.min(0, worldY - CANVAS_H * 0.55);
+
+        ctx.save();
+        ctx.translate(0, -camY);
+        sceneAlpha = (1 - climb) * (1 - exit);
+        if (sceneAlpha > 0.01) drawPlanetScene();
+        sceneAlpha = 1;
+        ctx.restore();
+
+        rocketX = padWX - p.scrollX;
+        rocketY = worldY - camY;
+    }
+
+    // Ease into the belt's launch pose: x 120, mid-height, nose to the right
+    const x = rocketX + (120 - rocketX) * exit;
+    const y = rocketY + (CANVAS_H / 2 - rocketY) * exit;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-Math.PI / 2 * (1 - exit));
+    ctx.scale(1 - 0.12 * climb * (1 - exit), 1 - 0.12 * climb * (1 - exit));
+    SHIP_SKINS[state.shipSkin].draw(ctx, true);
+    ctx.restore();
+
+    const nextName = state.beltIndex >= TIERS.length - 1
+        ? 'Mission complete'
+        : `Next stop: ${TIERS[state.beltIndex + 1].name} belt`;
+    bannerText(nextName, Math.min(1, climb * 1.5) * (1 - exit * 0.4));
 }
 
 function bannerText(text, alpha) {
