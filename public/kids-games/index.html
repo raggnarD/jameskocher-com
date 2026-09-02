@@ -32,20 +32,12 @@
                 <div class="category-header">
                     <h2>🔢 Math Games</h2>
                 </div>
+                <!-- Card order and the "New" badge are derived at runtime from each
+                     card's data-released date (see flagNewestGame below). To ship a new
+                     game, just set its data-released to the introduction date - never
+                     bump it for bug fixes or updates. Ties keep their authored order. -->
                 <div class="games-grid">
-                    <div class="game-card" onclick="window.location.href='math-adventure/index.html'">
-                        <div class="game-icon">🐕🐱</div>
-                        <h2>Math Adventure</h2>
-                        <p>Help the dog reach the cat by solving math problems!</p>
-                        <div class="game-features">
-                            <span>➕ Addition</span>
-                            <span>➖ Subtraction</span>
-                            <span>✖️ Multiplication</span>
-                            <span>➗ Division</span>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="window.location.href='willfall/index.html'">
+                    <div class="game-card" data-released="2026-05-29" onclick="window.location.href='willfall/index.html'">
                         <div class="game-icon">🚀🪨</div>
                         <h2>WillFall</h2>
                         <p>Pilot a spaceship through asteroid belts — solve math for gas and shields!</p>
@@ -56,6 +48,18 @@
                             <span>📚 K–5th</span>
                         </div>
                     </div>
+
+                    <div class="game-card" data-released="2026-05-20" onclick="window.location.href='math-adventure/index.html'">
+                        <div class="game-icon">🐕🐱</div>
+                        <h2>Math Adventure</h2>
+                        <p>Help the dog reach the cat by solving math problems!</p>
+                        <div class="game-features">
+                            <span>➕ Addition</span>
+                            <span>➖ Subtraction</span>
+                            <span>✖️ Multiplication</span>
+                            <span>➗ Division</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -64,7 +68,7 @@
                     <h2>📚 Sight Words Games</h2>
                 </div>
                 <div class="games-grid">
-                    <div class="game-card" onclick="window.location.href='sight-words/index.html'">
+                    <div class="game-card" data-released="2026-05-20" onclick="window.location.href='sight-words/index.html'">
                         <div class="game-icon">🦃</div>
                         <h2>Sight Words</h2>
                         <p>Help the turkey collect feathers by spelling sight words!</p>
@@ -76,7 +80,7 @@
                         </div>
                     </div>
 
-                    <div class="game-card" onclick="window.location.href='listen-match/index.html'">
+                    <div class="game-card" data-released="2026-05-20" onclick="window.location.href='listen-match/index.html'">
                         <div class="game-icon">🤖🦃</div>
                         <h2>Listen & Match</h2>
                         <p>Listen to words and match them with the robotic turkey!</p>
@@ -88,7 +92,7 @@
                         </div>
                     </div>
 
-                    <div class="game-card" onclick="window.location.href='ear-gears/index.html'">
+                    <div class="game-card" data-released="2026-05-20" onclick="window.location.href='ear-gears/index.html'">
                         <div class="game-icon">⚙️</div>
                         <h2>Ear Gears</h2>
                         <p>Drag and drop gears to match sight words!</p>
@@ -100,7 +104,7 @@
                         </div>
                     </div>
 
-                    <div class="game-card" onclick="window.location.href='shark-sight/index.html'">
+                    <div class="game-card" data-released="2026-05-20" onclick="window.location.href='shark-sight/index.html'">
                         <div class="game-icon">🦈</div>
                         <h2>Shark Sight</h2>
                         <p>Help the shark swim through the ocean by spelling words!</p>
@@ -112,7 +116,7 @@
                         </div>
                     </div>
 
-                    <div class="game-card" onclick="window.location.href='word-memory/index.html'">
+                    <div class="game-card" data-released="2026-05-20" onclick="window.location.href='word-memory/index.html'">
                         <div class="game-icon">🔊</div>
                         <h2>Word Memory</h2>
                         <p>Remember where words are hidden by listening to sounds!</p>
@@ -124,7 +128,7 @@
                         </div>
                     </div>
 
-                    <div class="game-card" onclick="window.location.href='word-bingo/index.html'">
+                    <div class="game-card" data-released="2026-05-20" onclick="window.location.href='word-bingo/index.html'">
                         <div class="game-icon">🎯</div>
                         <h2>Word Bingo</h2>
                         <p>Listen to words and mark them on your bingo card!</p>
@@ -145,6 +149,45 @@
     </div>
 
     <script>
+        // Flag the site-wide newest game and float each section's newest to the front.
+        // Source of truth is data-released on each .game-card: the date the game was
+        // INTRODUCED, not the date it was last touched. Cards sharing a date keep the
+        // order they are authored in.
+        function flagNewestGame() {
+            const cards = Array.from(document.querySelectorAll('.game-card[data-released]'));
+            if (!cards.length) return;
+
+            const released = card => card.dataset.released || '';
+
+            // Idempotent: clear any previous pass before re-deriving.
+            cards.forEach(card => card.classList.remove('is-new'));
+            document.querySelectorAll('.new-badge').forEach(badge => badge.remove());
+
+            // Newest release date anywhere on the page.
+            const newest = cards.reduce((max, card) =>
+                released(card) > max ? released(card) : max, '');
+
+            // Badge exactly one card: the first with that date, in authored order.
+            const newestCard = cards.find(card => released(card) === newest);
+            if (newestCard) {
+                newestCard.classList.add('is-new');
+                const badge = document.createElement('span');
+                badge.className = 'new-badge';
+                badge.textContent = '\u2728 New';
+                newestCard.prepend(badge);
+            }
+
+            // Within each section, newest first. Array.sort is stable, so equal dates
+            // keep their authored order.
+            document.querySelectorAll('.games-grid').forEach(grid => {
+                Array.from(grid.querySelectorAll('.game-card[data-released]'))
+                    .sort((a, b) => released(b).localeCompare(released(a)))
+                    .forEach(card => grid.appendChild(card));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', flagNewestGame);
+
         // Show welcome modal on first visit
         document.addEventListener('DOMContentLoaded', function() {
             const hasSeenModal = localStorage.getItem('hasSeenWelcomeModal');

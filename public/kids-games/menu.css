@@ -76,6 +76,7 @@ header h1 {
 .game-card {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 15px;
+    position: relative;
     padding: 30px;
     text-align: center;
     cursor: pointer;
@@ -93,6 +94,42 @@ header h1 {
 .game-icon {
     font-size: 4em;
     margin-bottom: 15px;
+}
+
+/* Applied at runtime by flagNewestGame() in index.html, driven by data-released */
+.game-card.is-new {
+    border-color: #f5a623;
+    box-shadow: 0 5px 18px rgba(245, 166, 35, 0.28);
+}
+
+.game-card.is-new:hover {
+    border-color: #f5a623;
+    box-shadow: 0 10px 25px rgba(245, 166, 35, 0.45);
+}
+
+.new-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, #f5a623 0%, #f2545b 100%);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: 0 3px 8px rgba(242, 84, 91, 0.4);
+    animation: new-badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes new-badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .new-badge { animation: none; }
 }
 
 .game-card h2 {
