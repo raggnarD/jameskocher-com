@@ -10,6 +10,7 @@ const CANVAS_H = canvas.height;
 // World constants
 const SHIP_FORWARD_SPEED_MPS = 1000;            // 100,000 mi / 100s
 const TANK_MILES = 100000 / 3;                  // 1/3 tank per 100k mile tier
+const BELT_LENGTH = 100000;                     // miles per belt before the planet stage
 const MAX_SHIELDS = 5;
 const SHIP_W = 56;
 const SHIP_H = 36;
@@ -192,7 +193,15 @@ const state = {
     bestMiles: 0,
     shipSkin: 0,        // index into SHIP_SKINS — cosmetic only
     cheated: false,     // true if warp easter egg used — disqualifies high score
-    warpEffect: 0       // countdown (seconds) for the warp flash animation
+    warpEffect: 0,      // countdown (seconds) for the warp flash animation
+
+    // Stage machine — belts and planets alternate
+    phase: 'belt',      // 'belt' | 'descend' | 'planet' | 'ascend'
+    beltIndex: 0,       // authoritative belt (0..TIERS.length-1) during play
+    bonusMiles: 0,      // planet bonus — deliberately kept OUT of state.miles
+    planet: null,       // platformer world while on the surface
+    transition: null,   // { kind, t, dur } while descending / ascending
+    tierBanner: 0       // countdown for the "entering X belt" banner
 };
 
 // Keys
@@ -220,7 +229,7 @@ window.addEventListener('keydown', (e) => {
             if (warpBuffer.length > WARP_CODE.length) warpBuffer.shift();
             if (warpBuffer.join('') === WARP_CODE.join('')) {
                 warpBuffer = [];
-                warpToNextTier();
+                warpSkip();
             }
         }
     }
@@ -280,7 +289,21 @@ function loop(ts) {
     const dt = Math.min(0.05, (ts - state.lastFrameTs) / 1000);
     state.lastFrameTs = ts;
 
-    if (state.running && !state.paused) update(dt);
+    if (state.running && !state.paused) {
+        switch (state.phase) {
+            case 'belt':    update(dt); break;
+            case 'planet':  updatePlanet(dt); break;
+            case 'descend':
+            case 'ascend':  updateTransition(dt); break;
+        }
+    }
+
+    // Timed effects tick on real dt in every phase (the old flash decayed by a
+    // hardcoded 1/60, which made it half-length on a 120Hz display).
+    if (flashTime > 0) flashTime = Math.max(0, flashTime - dt);
+    if (state.warpEffect > 0) state.warpEffect = Math.max(0, state.warpEffect - dt);
+    if (state.tierBanner > 0) state.tierBanner = Math.max(0, state.tierBanner - dt);
+
     draw();
     requestAnimationFrame(loop);
 }
@@ -317,8 +340,18 @@ function update(dt) {
         state.miles += IDLE_MILES_PER_SEC * dt;
     }
 
+    // Belt boundary — the belt ends here and the planet stage takes over.
+    // Miles are clamped and then frozen for the whole surface stage.
+    const beltEnd = TIERS[state.beltIndex].miles + BELT_LENGTH;
+    if (state.miles >= beltEnd) {
+        state.miles = beltEnd;
+        updateHUD();
+        startDescent();
+        return;
+    }
+
     // Asteroids — speed scales with scroll rate so idle drifts them slowly
-    const { tier, index: tierIdx } = tierAt(state.miles);
+    const tierIdx = state.beltIndex;
     state.spawnTimer += dt * 1000;
     // Slow spawning when idle so the field doesn't pile up unfairly
     const effectiveSpawn = spawnIntervalMs(tierIdx) / Math.max(0.3, scrollRate);
@@ -349,7 +382,6 @@ function update(dt) {
         }
     }
 
-    if (state.warpEffect > 0) state.warpEffect = Math.max(0, state.warpEffect - dt);
     updateHUD();
 }
 
@@ -371,17 +403,24 @@ function handleShipHit(asteroid) {
     triggerHitMath();
 }
 
-function warpToNextTier() {
-    const { index } = tierAt(state.miles);
-    if (index >= TIERS.length - 1) return; // already at the last tier — nowhere to warp
-    const next = TIERS[index + 1];
-    state.miles = next.miles + 500;         // land just inside the next tier boundary
+// TURBO now skips to the *next stage*, not the next belt:
+//   in a belt   → end the belt and descend to this tier's planet
+//   on a planet → abandon it (no puzzle, no bonus) and launch to the next belt
+function warpSkip() {
+    if (state.phase !== 'belt' && state.phase !== 'planet') return;
     state.cheated = true;
-    state.warpEffect = 2.0;                 // seconds the animation plays
-    state.asteroids = [];                   // clear the field for a fresh start
-    state.gasMiles = TANK_MILES;            // refuel so you don't immediately run out
+    state.warpEffect = 2.0;
     flashCanvas('#9966ff');
-    updateHUD();
+
+    if (state.phase === 'belt') {
+        state.miles = TIERS[state.beltIndex].miles + BELT_LENGTH;
+        state.asteroids = [];
+        state.gasMiles = TANK_MILES;
+        updateHUD();
+        startDescent();
+    } else {
+        startAscent();
+    }
 }
 
 function triggerGasMath() {
@@ -478,6 +517,60 @@ let flashTime = 0;
 function flashCanvas(color) { flashColor = color; flashTime = 0.25; }
 
 function draw() {
+    switch (state.phase) {
+        case 'planet':   drawPlanetScene(); break;
+        case 'descend':
+        case 'ascend':   drawTransition(); break;
+        default:         drawBelt(); break;
+    }
+    drawFlash();
+    drawWarpSplash();
+    drawCheatBadge();
+}
+
+function drawFlash() {
+    if (flashTime <= 0) return;
+    ctx.save();
+    ctx.fillStyle = flashColor;
+    ctx.globalAlpha = Math.min(1, flashTime);
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.restore();
+}
+
+function drawWarpSplash() {
+    if (state.warpEffect <= 0) return;
+    const label = state.phase === 'descend' || state.phase === 'planet'
+        ? `Skipping to ${TIERS[state.beltIndex].emoji} ${TIERS[state.beltIndex].name} Planet`
+        : 'Skipping ahead';
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, state.warpEffect);
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 44px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = '#c896ff';
+    ctx.fillText('⚡ WARP ACTIVATED ⚡', CANVAS_W / 2, CANVAS_H / 2 - 22);
+    ctx.font = '22px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(label, CANVAS_W / 2, CANVAS_H / 2 + 18);
+    ctx.font = '14px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = '#ff9966';
+    ctx.fillText('Score excluded from leaderboard', CANVAS_W / 2, CANVAS_H / 2 + 46);
+    ctx.textAlign = 'left';
+    ctx.restore();
+}
+
+// Persistent badge so the player always knows their run is off the books
+function drawCheatBadge() {
+    if (!state.cheated) return;
+    ctx.save();
+    ctx.font = '12px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(200,150,255,0.65)';
+    ctx.textAlign = 'right';
+    ctx.fillText('⚡ warp used — score excluded', CANVAS_W - 12, 44);
+    ctx.textAlign = 'left';
+    ctx.restore();
+}
+
+function drawBelt() {
     // Bg
     ctx.fillStyle = '#02020a';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -491,7 +584,7 @@ function draw() {
     ctx.globalAlpha = 1;
 
     // Tier band
-    const { tier } = tierAt(state.miles);
+    const tier = TIERS[state.beltIndex];
     ctx.fillStyle = tier.color + '22';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
@@ -501,15 +594,6 @@ function draw() {
     // Ship
     drawShip(state.ship.x, state.ship.y, keyHeld('arrowright', 'd') && state.gasMiles > 0);
 
-    // Flash on hit
-    if (flashTime > 0) {
-        ctx.fillStyle = flashColor;
-        ctx.globalAlpha = flashTime;
-        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-        ctx.globalAlpha = 1;
-        flashTime -= 1 / 60;
-    }
-
     // Tier banner at top
     ctx.fillStyle = '#ffffffcc';
     ctx.font = '14px -apple-system, system-ui, sans-serif';
@@ -517,32 +601,17 @@ function draw() {
     ctx.fillText(`${tier.emoji} ${tier.name} belt`, CANVAS_W - 12, 22);
     ctx.textAlign = 'left';
 
-    // Warp activated splash
-    if (state.warpEffect > 0) {
-        const alpha = Math.min(1, state.warpEffect);   // fades out over the last second
+    // "Entering X belt" banner after a blast-off
+    if (state.tierBanner > 0) {
         ctx.save();
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = Math.min(1, state.tierBanner);
         ctx.textAlign = 'center';
-        ctx.font = 'bold 44px -apple-system, system-ui, sans-serif';
-        ctx.fillStyle = '#c896ff';
-        ctx.fillText('⚡ WARP ACTIVATED ⚡', CANVAS_W / 2, CANVAS_H / 2 - 22);
-        ctx.font = '22px -apple-system, system-ui, sans-serif';
+        ctx.font = 'bold 30px -apple-system, system-ui, sans-serif';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`Entering ${tier.emoji} ${tier.name} Belt`, CANVAS_W / 2, CANVAS_H / 2 + 18);
-        ctx.font = '14px -apple-system, system-ui, sans-serif';
-        ctx.fillStyle = '#ff9966';
-        ctx.fillText('Score excluded from leaderboard', CANVAS_W / 2, CANVAS_H / 2 + 46);
-        ctx.textAlign = 'left';
-        ctx.restore();
-    }
-
-    // Persistent badge so the player always knows their run is off the books
-    if (state.cheated) {
-        ctx.save();
-        ctx.font = '12px -apple-system, system-ui, sans-serif';
-        ctx.fillStyle = 'rgba(200,150,255,0.65)';
-        ctx.textAlign = 'right';
-        ctx.fillText('⚡ warp used — score excluded', CANVAS_W - 12, 44);
+        ctx.fillText(`${tier.emoji} ${tier.name} Belt`, CANVAS_W / 2, 70);
+        ctx.font = '16px -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = tier.glow;
+        ctx.fillText('Hold → to thrust', CANVAS_W / 2, 98);
         ctx.textAlign = 'left';
         ctx.restore();
     }
@@ -606,7 +675,7 @@ function drawAsteroid(a) {
 // HUD
 function updateHUD() {
     document.getElementById('distanceDisplay').textContent = `${Math.floor(state.miles).toLocaleString()} mi`;
-    const { tier } = tierAt(state.miles);
+    const tier = TIERS[state.beltIndex];
     document.getElementById('tierDisplay').textContent = `${tier.emoji} ${tier.name}`;
     document.getElementById('shieldDisplay').textContent = '🛡️'.repeat(state.shields) + '🖤'.repeat(MAX_SHIELDS - state.shields);
     const gasPercent = state.gasMiles / TANK_MILES;
@@ -633,21 +702,44 @@ async function startGame() {
     state.lastFrameTs = 0;
     state.cheated = false;
     state.warpEffect = 0;
+    state.phase = 'belt';
+    state.beltIndex = 0;
+    state.bonusMiles = 0;
+    state.planet = null;
+    state.transition = null;
+    state.tierBanner = 0;
     warpBuffer = [];
     initStars();
+    showPlanetHUD(false);
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.add('hidden');
     updateHUD();
 }
 
-async function endGame() {
+// Reached the far side of the final planet — the run is won, not lost.
+function winGame() {
+    endGame(true);
+}
+
+async function endGame(victory = false) {
     state.running = false;
     state.paused = false;
+    state.phase = 'belt';
     hideMath();
-    const final = Math.floor(state.miles);
+    showPlanetHUD(false);
+
+    // Distance flown and the planet bonus are shown apart, then submitted as one
+    // total so the stored leaderboard schema is unchanged.
+    const flown = Math.floor(state.miles);
+    const bonus = Math.floor(state.bonusMiles);
+    const final = flown + bonus;
     if (final > state.bestMiles) state.bestMiles = final;
+    document.getElementById('gameOverTitle').textContent = victory ? '🏆 Mission Complete!' : '💥 Game Over';
+    document.getElementById('victoryNote').classList.toggle('hidden', !victory);
+    document.getElementById('finalFlown').textContent = flown.toLocaleString();
+    document.getElementById('finalBonus').textContent = bonus.toLocaleString();
     document.getElementById('finalDistance').textContent = final.toLocaleString();
-    document.getElementById('finalTier').textContent = tierAt(final).tier.name;
+    document.getElementById('finalTier').textContent = TIERS[state.beltIndex].name;
 
     // Warp runs are excluded from the leaderboard; still fetch scores so they display
     const entry = document.getElementById('highScoreEntry');
@@ -760,7 +852,8 @@ document.getElementById('saveScoreBtn').addEventListener('click', async () => {
         return;
     }
     fb.textContent = 'Saving…';
-    await ScoreStore.submitScore({ initials, distance: Math.floor(state.miles), grade: state.grade });
+    const total = Math.floor(state.miles) + Math.floor(state.bonusMiles);
+    await ScoreStore.submitScore({ initials, distance: total, grade: state.grade });
     document.getElementById('highScoreEntry').classList.add('hidden');
     setActiveTab('hsTabsEnd', state.grade);
     await renderHighScores('highScoreListEnd', state.grade);

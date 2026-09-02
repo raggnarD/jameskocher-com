@@ -10,18 +10,19 @@
     <div class="game-container">
         <header>
             <h1>🚀 <span class="title-gradient">WillFall</span> 🪨</h1>
-            <p class="subtitle">Pilot through the asteroid belt — solve math to refuel and survive!</p>
+            <p class="subtitle">Fly the belts, land on planets, mine resources — solve math to keep going!</p>
             <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
         </header>
 
         <div id="startScreen" class="overlay-screen">
             <div class="overlay-card">
                 <h2>🚀 Ready for Launch?</h2>
-                <p>Fly as far as you can. Dodge asteroids. Solve math problems for gas and shield repairs.</p>
+                <p>Fly through ten asteroid belts. Land on a planet after each one, mine its resources, and build a base to launch again.</p>
                 <div class="control-hints">
-                    <div><span class="key">↑ ↓ ← →</span> or <span class="key">W A S D</span> to fly</div>
-                    <div>Hold two keys to fly diagonally</div>
+                    <div><strong>In the belt:</strong> <span class="key">↑</span> <span class="key">↓</span> or <span class="key">W</span> <span class="key">S</span> to steer</div>
                     <div>Hold <span class="key">→</span> or <span class="key">D</span> to thrust forward (uses gas)</div>
+                    <div><strong>On a planet:</strong> <span class="key">←</span> <span class="key">→</span> to move, <span class="key">Space</span> to jump</div>
+                    <div>Collect 10 of every resource, then build your base and blast off</div>
                 </div>
 
                 <div class="grade-picker">
@@ -77,7 +78,7 @@
         </div>
 
         <div class="main-content">
-            <div class="hud">
+            <div class="hud" id="beltHud">
                 <div class="hud-item">
                     <div class="hud-label">Distance</div>
                     <div class="hud-value" id="distanceDisplay">0 mi</div>
@@ -101,12 +102,34 @@
                 </div>
             </div>
 
+            <div class="hud hidden" id="planetHud">
+                <div class="hud-item">
+                    <div class="hud-label">Planet</div>
+                    <div class="hud-value" id="planetNameDisplay">🪨 Rock</div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">Shields</div>
+                    <div class="hud-value" id="planetShieldDisplay">🛡️🛡️🛡️🛡️🛡️</div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">Bonus</div>
+                    <div class="hud-value" id="planetBonusDisplay">+0 mi</div>
+                </div>
+                <div class="hud-item resources">
+                    <div class="hud-label">Resources</div>
+                    <div class="res-chips" id="resourceChips"></div>
+                </div>
+            </div>
+
             <div class="canvas-wrap">
                 <canvas id="gameCanvas" width="960" height="540"></canvas>
             </div>
 
-            <div class="footer-hint">
+            <div class="footer-hint" id="beltHint">
                 ➡️ Hold right to thrust • 🪨 Dodge asteroids • ⛽ Math problem appears when you run out of gas or take a hit
+            </div>
+            <div class="footer-hint hidden" id="planetHint">
+                ⬅️➡️ Move • ␣ Space to jump • 👾 Dodge aliens • ⛏️ Collect 10 of each resource • 🏗️ Then build your base
             </div>
         </div>
 
@@ -124,8 +147,13 @@
 
         <div id="gameOverScreen" class="overlay-screen hidden">
             <div class="overlay-card">
-                <h2>💥 Game Over</h2>
-                <p>You traveled <span id="finalDistance" class="big-num">0</span> miles.</p>
+                <h2 id="gameOverTitle">💥 Game Over</h2>
+                <p id="victoryNote" class="victory-note hidden">🏆 You built a base on all ten worlds. The galaxy is yours!</p>
+                <p>Total score: <span id="finalDistance" class="big-num">0</span> miles.</p>
+                <p class="score-breakdown">
+                    🚀 Flown <span id="finalFlown">0</span> mi
+                    &nbsp;·&nbsp; 🪐 Planet bonus <span id="finalBonus">0</span> mi
+                </p>
                 <p>Tier reached: <span id="finalTier">Rock</span></p>
 
                 <div id="highScoreEntry" class="high-score-entry hidden">
@@ -162,5 +190,6 @@
     <script src="scores.js"></script>
     <script src="math.js"></script>
     <script src="game.js"></script>
+    <script src="planet.js"></script>
 </body>
 </html>
