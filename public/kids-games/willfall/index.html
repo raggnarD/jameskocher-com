@@ -97,6 +97,10 @@
                     <span id="gasWarning">⚠️ Low Fuel!</span>
                 </div>
                 <div class="hud-item">
+                    <div class="hud-label">Tokens</div>
+                    <div class="hud-value" id="tokenDisplay">🪙 0</div>
+                </div>
+                <div class="hud-item">
                     <div class="hud-label">Best</div>
                     <div class="hud-value" id="bestDisplay">0 mi</div>
                 </div>
@@ -110,6 +114,10 @@
                 <div class="hud-item">
                     <div class="hud-label">Bonus</div>
                     <div class="hud-value" id="planetBonusDisplay">+0 mi</div>
+                </div>
+                <div class="hud-item">
+                    <div class="hud-label">Tokens</div>
+                    <div class="hud-value" id="planetTokenDisplay">🪙 0</div>
                 </div>
                 <div class="hud-item resources">
                     <div class="hud-label">Resources</div>
@@ -141,6 +149,32 @@
             </div>
         </div>
 
+        <div id="shopScreen" class="overlay-screen hidden">
+            <div class="overlay-card shop-card">
+                <div class="shop-head">
+                    <div>
+                        <h2>🛠️ Trading Post</h2>
+                        <p class="shop-subtitle" id="shopSubtitle">Stage cleared — here's your token.</p>
+                    </div>
+                    <div class="token-chip" id="shopTokens">🪙 0</div>
+                </div>
+
+                <canvas id="shopPreview" class="shop-preview" width="460" height="270"></canvas>
+
+                <div class="shop-tabs" id="shopTabs">
+                    <button class="shop-tab active" data-tab="interior">🛋️ Interior</button>
+                    <button class="shop-tab" data-tab="exterior">🎨 Exterior</button>
+                    <button class="shop-tab" data-tab="upgrades">🔧 Upgrades</button>
+                </div>
+
+                <div class="shop-body" id="shopBody"></div>
+
+                <div class="shop-toast" id="shopToast"></div>
+                <p class="shop-hint">Everything costs 1 🪙 · tap what's in use to put it away · skip to bank your tokens</p>
+                <button class="btn-primary big" id="shopContinue">🚀 Continue</button>
+            </div>
+        </div>
+
         <div id="gameOverScreen" class="overlay-screen hidden">
             <div class="overlay-card">
                 <h2 id="gameOverTitle">💥 Game Over</h2>
@@ -151,6 +185,7 @@
                     &nbsp;·&nbsp; 🪐 Planet bonus <span id="finalBonus">0</span> mi
                 </p>
                 <p>Tier reached: <span id="finalTier">Rock</span></p>
+                <p class="shop-summary hidden" id="shopSummary"></p>
 
                 <div id="highScoreEntry" class="high-score-entry hidden">
                     <h3>🏆 New High Score!</h3>
@@ -187,5 +222,6 @@
     <script src="math.js"></script>
     <script src="game.js"></script>
     <script src="planet.js"></script>
+    <script src="shop.js"></script>
 </body>
 </html>

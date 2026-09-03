@@ -27,6 +27,14 @@ const MAN_START_X = 0.30;      // fraction of canvas width the spaceman lands at
 const TRANSITION_DUR = 2.6;    // seconds for descend / ascend
 const ASCENT_CLIMB = 0.62;     // fraction of the ascent spent climbing off-world
 
+// ── Upgrade effects (surface stage) ──────────────────────────────────────────
+// Mirrors the belt-stage accessors in game.js: shop upgrades scale the tunables
+// above for the rest of the run, and each is a no-op with an empty shop.
+function jumpV()            { return PLANET_JUMP_V * (1 + 0.15 * upgLevel('gravBoots')); }
+function pickupForgive()    { return 1.0 + 0.5 * upgLevel('magnet'); }
+function hitDrop()          { return upgLevel('cargoNet') > 0 ? 1 : HIT_DROP; }
+function bonusPerResource() { return BONUS_PER_RESOURCE + 100 * upgLevel('refinery'); }
+
 // ── Resource table — derived from TIERS so the two can never drift ───────────
 function resourceFor(tierIndex) {
     const t = TIERS[tierIndex];
@@ -192,7 +200,7 @@ function updateSpaceman(p, dt) {
 
     // Jump — ground only, no double jump. Releasing early cuts the arc short.
     if (jump && m.onGround) {
-        m.vy = -PLANET_JUMP_V;
+        m.vy = -jumpV();
         m.onGround = false;
     }
     if (!jump && m.vy < 0) m.vy *= Math.pow(JUMP_CUT, dt * 12);
@@ -250,9 +258,9 @@ function updateItems(p, dt) {
     p.items = p.items.filter(it => {
         if (it.wx < p.scrollX - 60) return false;
         const box = { x: it.wx, y: it.y, w: it.r * 2.2, h: it.r * 2.2 };
-        if (boxesOverlap(manBox, box, 1.0)) {
+        if (boxesOverlap(manBox, box, pickupForgive())) {
             p.collected[it.type] = Math.min(p.required, p.collected[it.type] + 1);
-            state.bonusMiles += BONUS_PER_RESOURCE;
+            state.bonusMiles += bonusPerResource();
             flashCanvas(TIERS[it.type].glow);
             return false;
         }
@@ -302,9 +310,9 @@ function hitByAlien(p) {
         if (p.collected[t] > 0 && (worst === null || p.collected[t] > p.collected[worst])) worst = t;
     }
     if (worst !== null) {
-        const lost = Math.min(HIT_DROP, p.collected[worst]);
+        const lost = Math.min(hitDrop(), p.collected[worst]);
         p.collected[worst] -= lost;
-        state.bonusMiles = Math.max(0, state.bonusMiles - lost * BONUS_PER_RESOURCE);
+        state.bonusMiles = Math.max(0, state.bonusMiles - lost * bonusPerResource());
         spawnDebris(p, worst, lost);
     }
 }
@@ -399,8 +407,8 @@ function openBaseMath(p) {
 function finishPlanet() {
     // Rewards for a completed base, then lift off.
     if (state.planet && state.planet.baseBuilt) {
-        state.gasMiles = TANK_MILES;
-        state.shields = Math.min(MAX_SHIELDS, state.shields + SHIELD_REWARD);
+        state.gasMiles = tankMiles();
+        state.shields = Math.min(maxShields(), state.shields + SHIELD_REWARD);
     }
     startAscent();
 }
@@ -439,20 +447,25 @@ function updateTransition(dt) {
         state.transition = null;
         state.planet = null;
         showPlanetHUD(false);
-        if (state.beltIndex >= TIERS.length - 1) {
-            winGame();
-        } else {
-            state.beltIndex += 1;
-            state.miles = TIERS[state.beltIndex].miles;
-            state.phase = 'belt';
-            state.asteroids = [];
-            state.spawnTimer = 0;
-            state.ship.x = 120;
-            state.ship.y = CANVAS_H / 2;
-            state.tierBanner = 2.2;
-            updateHUD();
-        }
+        // Planet cleared → Trading Post → next belt. The shop opens after the
+        // blast-off animation so the launch reads as one uninterrupted beat.
+        openShop('planet', () => {
+            if (state.beltIndex >= TIERS.length - 1) winGame();
+            else beginNextBelt();
+        });
     }
+}
+
+function beginNextBelt() {
+    state.beltIndex += 1;
+    state.miles = TIERS[state.beltIndex].miles;
+    state.phase = 'belt';
+    state.asteroids = [];
+    state.spawnTimer = 0;
+    state.ship.x = 120;
+    state.ship.y = CANVAS_H / 2;
+    state.tierBanner = 2.2;
+    updateHUD();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -472,6 +485,7 @@ function updatePlanetHUD() {
     document.getElementById('planetNameDisplay').textContent = `${p.tier.emoji} ${p.tier.name}`;
     document.getElementById('planetBonusDisplay').textContent =
         `+${Math.floor(state.bonusMiles).toLocaleString()} mi`;
+    document.getElementById('planetTokenDisplay').textContent = `🪙 ${state.shop.tokens}`;
 
     const sig = p.types.map(t => p.collected[t]).join(',') + '|' + p.tierIndex;
     if (sig === lastChipSig) return;
@@ -777,7 +791,7 @@ function drawLandedRocket(p, wx, yOffset = 0, thrusting = false) {
     ctx.save();
     ctx.translate(x, gy - 34 + yOffset);
     ctx.rotate(-Math.PI / 2);            // stand the ship on its tail
-    SHIP_SKINS[state.shipSkin].draw(ctx, thrusting);
+    drawShipSkin(ctx, thrusting);
     ctx.restore();
     if (!thrusting) {
         // Landing legs
@@ -845,7 +859,7 @@ function drawTransition() {
         ctx.translate(sx, sy);
         ctx.rotate(k * Math.PI / 2.4);
         ctx.scale(scale, scale);
-        SHIP_SKINS[state.shipSkin].draw(ctx, true);
+        drawShipSkin(ctx, true);
         ctx.restore();
 
         // Crossfade into the surface over the last third
@@ -905,7 +919,7 @@ function drawAscent(tr, p) {
     ctx.translate(x, y);
     ctx.rotate(-Math.PI / 2 * (1 - exit));
     ctx.scale(1 - 0.12 * climb * (1 - exit), 1 - 0.12 * climb * (1 - exit));
-    SHIP_SKINS[state.shipSkin].draw(ctx, true);
+    drawShipSkin(ctx, true);
     ctx.restore();
 
     const nextName = state.beltIndex >= TIERS.length - 1

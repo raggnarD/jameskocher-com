@@ -17,13 +17,35 @@ const SHIP_H = 36;
 const SHIP_MOVE_PX_PER_SEC = 320;               // on-screen movement speed
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Ship skins — each exposes draw(ctx, thrusting) in local coords (origin = center)
+// Ship skins — each exposes draw(ctx, thrusting, palette) in local coords
+// (origin = center, nose pointing +x).
+//
+// Hull colors come from the palette argument, never from literals, so the shop
+// can repaint any ship. Every hull path is closed and then handed to
+// paintHull(), which fills it, clips a pattern inside it, and strokes it. A new
+// ship only has to follow that contract to inherit every paint scheme for free.
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Paints the CURRENT path as a hull: base fill, optional pattern clipped to the
+// silhouette, then the outline. The path itself is not part of the canvas state
+// stack, so it survives save/restore and the stroke after restore is correct.
+function paintHull(c, pal) {
+    c.save();
+    c.fillStyle = pal.fill;
+    c.fill();
+    if (pal.pattern) { c.clip(); pal.pattern(c, pal); }
+    c.restore();
+    c.strokeStyle = pal.stroke;
+    c.lineWidth = 2;
+    c.stroke();
+}
+
 const SHIP_SKINS = [
     // ── 0 · Viper ─────────────────────── sleek swept-wing fighter (blue) ──
     {
         name: 'Viper',
-        draw(c, thrusting) {
+        palette: { fill: '#dde6ff', stroke: '#7aa8ff', accent: '#7aa8ff' },
+        draw(c, thrusting, pal) {
             const W = SHIP_W, H = SHIP_H;
             if (thrusting) {
                 const fl = 0.6 + Math.random() * 0.4;
@@ -35,13 +57,13 @@ const SHIP_SKINS = [
                 c.moveTo(-W/2, -6); c.lineTo(-W/2 - 18*fl, 0); c.lineTo(-W/2, 6);
                 c.closePath(); c.fill();
             }
-            c.fillStyle = '#dde6ff'; c.strokeStyle = '#7aa8ff'; c.lineWidth = 2;
             c.beginPath();
             c.moveTo(W/2, 0);
             c.lineTo(-W/2+8, -H/2); c.lineTo(-W/2, -H/4);
             c.lineTo(-W/2, H/4);    c.lineTo(-W/2+8, H/2);
-            c.closePath(); c.fill(); c.stroke();
-            c.fillStyle = '#7aa8ff';
+            c.closePath();
+            paintHull(c, pal);
+            c.fillStyle = pal.accent;
             c.beginPath(); c.ellipse(8, 0, 8, 5, 0, 0, Math.PI*2); c.fill();
         }
     },
@@ -49,7 +71,8 @@ const SHIP_SKINS = [
     // ── 1 · Falcon ──────────────────────── wide delta bomber (gold) ──
     {
         name: 'Falcon',
-        draw(c, thrusting) {
+        palette: { fill: '#ffe4b0', stroke: '#c07818', accent: '#c07818', trim: '#ffcc60' },
+        draw(c, thrusting, pal) {
             const W = SHIP_W, H = SHIP_H;
             if (thrusting) {
                 const fl = 0.6 + Math.random() * 0.4;
@@ -63,7 +86,6 @@ const SHIP_SKINS = [
                     c.closePath(); c.fill();
                 }
             }
-            c.fillStyle = '#ffe4b0'; c.strokeStyle = '#c07818'; c.lineWidth = 2;
             c.beginPath();
             c.moveTo(W/2, 0);
             c.lineTo(0, -H/2);     c.lineTo(-W/2+4, -H/2);
@@ -71,12 +93,13 @@ const SHIP_SKINS = [
             c.lineTo(-W/2+10, 2);
             c.lineTo(-W/2, H/4);   c.lineTo(-W/2+4, H/2);
             c.lineTo(0, H/2);
-            c.closePath(); c.fill(); c.stroke();
+            c.closePath();
+            paintHull(c, pal);
             // Cockpit
-            c.fillStyle = '#c07818';
+            c.fillStyle = pal.accent;
             c.beginPath(); c.ellipse(10, 0, 9, 4, 0, 0, Math.PI*2); c.fill();
             // Engine pod outlines
-            c.strokeStyle = '#ffcc60'; c.lineWidth = 1.5;
+            c.strokeStyle = pal.trim || pal.accent; c.lineWidth = 1.5;
             for (const oy of [-H/4, H/4]) c.strokeRect(-W/2, oy-4, 10, 8);
         }
     },
@@ -84,7 +107,8 @@ const SHIP_SKINS = [
     // ── 2 · Dart ─────────────────── needle interceptor with tail fins (green) ──
     {
         name: 'Dart',
-        draw(c, thrusting) {
+        palette: { fill: '#b8ffd8', stroke: '#22aa66', accent: '#22aa66' },
+        draw(c, thrusting, pal) {
             const W = SHIP_W, H = SHIP_H;
             if (thrusting) {
                 const fl = 0.6 + Math.random() * 0.4;
@@ -96,24 +120,26 @@ const SHIP_SKINS = [
                 c.moveTo(-W/2, -3); c.lineTo(-W/2 - 22*fl, 0); c.lineTo(-W/2, 3);
                 c.closePath(); c.fill();
             }
-            c.fillStyle = '#b8ffd8'; c.strokeStyle = '#22aa66'; c.lineWidth = 2;
             // Thin needle fuselage
             c.beginPath();
             c.moveTo(W/2, 0);
             c.lineTo(W/4, -H/6);  c.lineTo(-W/4, -H/6);
             c.lineTo(-W/2, 0);
             c.lineTo(-W/4, H/6);  c.lineTo(W/4, H/6);
-            c.closePath(); c.fill(); c.stroke();
+            c.closePath();
+            paintHull(c, pal);
             // Top stabiliser fin
             c.beginPath();
             c.moveTo(-8, -H/6); c.lineTo(-12, -H/2+4); c.lineTo(-16, -H/6);
-            c.closePath(); c.fill(); c.stroke();
+            c.closePath();
+            paintHull(c, pal);
             // Bottom stabiliser fin (mirror)
             c.beginPath();
             c.moveTo(-8, H/6); c.lineTo(-12, H/2-4); c.lineTo(-16, H/6);
-            c.closePath(); c.fill(); c.stroke();
+            c.closePath();
+            paintHull(c, pal);
             // Cockpit visor
-            c.fillStyle = '#22aa66';
+            c.fillStyle = pal.accent;
             c.beginPath(); c.ellipse(W/4+2, 0, 7, 3, 0, 0, Math.PI*2); c.fill();
         }
     },
@@ -121,7 +147,8 @@ const SHIP_SKINS = [
     // ── 3 · Saucer ─────────────────────── alien disc scout (purple) ──
     {
         name: 'Saucer',
-        draw(c, thrusting) {
+        palette: { fill: '#e0b0ff', stroke: '#8822cc', accent: '#8822cc', dome: '#f0d8ff' },
+        draw(c, thrusting, pal) {
             const W = SHIP_W, H = SHIP_H;
             if (thrusting) {
                 const fl = 0.6 + Math.random() * 0.4;
@@ -134,26 +161,37 @@ const SHIP_SKINS = [
                 c.closePath(); c.fill();
             }
             // Disc body
-            c.fillStyle = '#e0b0ff'; c.strokeStyle = '#8822cc'; c.lineWidth = 2;
             c.beginPath(); c.ellipse(0, 0, W/2, H/3, 0, 0, Math.PI*2);
-            c.fill(); c.stroke();
+            paintHull(c, pal);
             // Underside rim detail
-            c.fillStyle = '#8822cc';
+            c.fillStyle = pal.accent;
             c.beginPath(); c.ellipse(0, H/3-3, W/2-4, 4, 0, 0, Math.PI); c.fill();
             // Dome — upper half-ellipse
             const domeCy = -H/3 + 4;
-            c.fillStyle = '#f0d8ff'; c.strokeStyle = '#8822cc';
+            c.fillStyle = pal.dome || pal.fill; c.strokeStyle = pal.stroke; c.lineWidth = 2;
             c.beginPath();
             c.ellipse(2, domeCy, W/4, H/3 - 2, 0, Math.PI, 0, false);
             c.closePath(); c.fill(); c.stroke();
             // Dome tint window
-            c.fillStyle = 'rgba(140,60,220,0.4)';
+            c.save();
+            c.globalAlpha = 0.4;
+            c.fillStyle = pal.accent;
             c.beginPath();
             c.ellipse(2, domeCy, W/8, (H/3-2)*0.5, 0, Math.PI, 0, false);
             c.closePath(); c.fill();
+            c.restore();
         }
     }
 ];
+
+// Single entry point for every ship render — belt, planet, transitions, previews.
+// Routes the skin's own palette through the shop so equipped paint applies
+// everywhere at once. Falls back to the stock palette if shop.js never loaded.
+function drawShipSkin(c, thrusting, skinIdx) {
+    const skin = SHIP_SKINS[skinIdx === undefined ? state.shipSkin : skinIdx];
+    const pal = typeof activePalette === 'function' ? activePalette(skin) : skin.palette;
+    skin.draw(c, thrusting, pal);
+}
 
 const TIERS = [
     { name: 'Rock',     miles: 0,       color: '#7d7d8a', glow: '#aaaaaa', emoji: '🪨' },
@@ -201,8 +239,25 @@ const state = {
     bonusMiles: 0,      // planet bonus — deliberately kept OUT of state.miles
     planet: null,       // platformer world while on the surface
     transition: null,   // { kind, t, dur } while descending / ascending
-    tierBanner: 0       // countdown for the "entering X belt" banner
+    tierBanner: 0,      // countdown for the "entering X belt" banner
+
+    // Trading Post — run-scoped, reset by startGame(). See shop.js.
+    shop: { tokens: 0, owned: {}, equipped: {}, upgrades: {} }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Upgrade effects — shop upgrades scale the belt-stage constants for the rest of
+// the run. Accessors live next to the constants they modify (the surface-stage
+// equivalents are in planet.js) and every one is safe before anything is bought,
+// so the game plays identically with an empty shop.
+// ─────────────────────────────────────────────────────────────────────────────
+function upgLevel(id) {
+    return (state.shop && state.shop.upgrades && state.shop.upgrades[id]) || 0;
+}
+function maxShields()  { return MAX_SHIELDS + upgLevel('shieldPlate'); }
+function tankMiles()   { return TANK_MILES * (1 + 0.30 * upgLevel('bigTank')); }
+function gasBurnMult() { return Math.pow(0.8, upgLevel('thrusters')); }
+function hitboxMult()  { return Math.pow(0.85, upgLevel('deflector')); }
 
 // Keys
 const keys = {};
@@ -332,7 +387,7 @@ function update(dt) {
     // Score: full 1000 mi/s while thrusting, gentle drip while coasting.
     if (thrusting) {
         state.miles += SHIP_FORWARD_SPEED_MPS * dt;
-        state.gasMiles = Math.max(0, state.gasMiles - SHIP_FORWARD_SPEED_MPS * dt);
+        state.gasMiles = Math.max(0, state.gasMiles - SHIP_FORWARD_SPEED_MPS * dt * gasBurnMult());
         if (state.gasMiles === 0) {
             triggerGasMath();
         }
@@ -342,11 +397,16 @@ function update(dt) {
 
     // Belt boundary — the belt ends here and the planet stage takes over.
     // Miles are clamped and then frozen for the whole surface stage.
+    // Running dry on the very frame the belt ends would stack the shop on top of
+    // the gas modal. Let the math resolve first; the next frame ends the belt.
+    if (state.paused) return;
+
     const beltEnd = TIERS[state.beltIndex].miles + BELT_LENGTH;
     if (state.miles >= beltEnd) {
         state.miles = beltEnd;
         updateHUD();
-        startDescent();
+        // Belt cleared → Trading Post → descent. Skipping the shop just continues.
+        openShop('belt', startDescent);
         return;
     }
 
@@ -389,8 +449,9 @@ function circleHitsShip(a) {
     // Approximate ship as a small box
     const sx = state.ship.x;
     const sy = state.ship.y;
-    const dx = Math.max(Math.abs(a.x - sx) - SHIP_W / 2, 0);
-    const dy = Math.max(Math.abs(a.y - sy) - SHIP_H / 2, 0);
+    const m = hitboxMult();
+    const dx = Math.max(Math.abs(a.x - sx) - (SHIP_W * m) / 2, 0);
+    const dy = Math.max(Math.abs(a.y - sy) - (SHIP_H * m) / 2, 0);
     return (dx * dx + dy * dy) < a.r * a.r * 0.7;
 }
 
@@ -415,9 +476,9 @@ function warpSkip() {
     if (state.phase === 'belt') {
         state.miles = TIERS[state.beltIndex].miles + BELT_LENGTH;
         state.asteroids = [];
-        state.gasMiles = TANK_MILES;
+        state.gasMiles = tankMiles();
         updateHUD();
-        startDescent();
+        openShop('belt', startDescent);
     } else {
         startAscent();
     }
@@ -426,7 +487,7 @@ function warpSkip() {
 function triggerGasMath() {
     showMath({
         reason: '⛽ Out of gas! Solve to refuel.',
-        onCorrect: () => { state.gasMiles = TANK_MILES; },
+        onCorrect: () => { state.gasMiles = tankMiles(); },
         onWrong: null  // gas math: keep trying, no shield loss
     });
 }
@@ -620,7 +681,7 @@ function drawBelt() {
 function drawShip(x, y, thrusting) {
     ctx.save();
     ctx.translate(x, y);
-    SHIP_SKINS[state.shipSkin].draw(ctx, thrusting);
+    drawShipSkin(ctx, thrusting);
     ctx.restore();
 }
 
@@ -635,7 +696,7 @@ function renderShipPreviews() {
         pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
         pCtx.save();
         pCtx.translate(pCanvas.width / 2, pCanvas.height / 2);
-        SHIP_SKINS[idx].draw(pCtx, false);
+        drawShipSkin(pCtx, false, idx);
         pCtx.restore();
     });
 }
@@ -677,8 +738,11 @@ function updateHUD() {
     document.getElementById('distanceDisplay').textContent = `${Math.floor(state.miles).toLocaleString()} mi`;
     const tier = TIERS[state.beltIndex];
     document.getElementById('tierDisplay').textContent = `${tier.emoji} ${tier.name}`;
-    document.getElementById('shieldDisplay').textContent = '🛡️'.repeat(state.shields) + '🖤'.repeat(MAX_SHIELDS - state.shields);
-    const gasPercent = state.gasMiles / TANK_MILES;
+    const cap = maxShields();
+    document.getElementById('shieldDisplay').textContent =
+        '🛡️'.repeat(state.shields) + '🖤'.repeat(Math.max(0, cap - state.shields));
+    document.getElementById('tokenDisplay').textContent = `🪙 ${state.shop.tokens}`;
+    const gasPercent = state.gasMiles / tankMiles();
     const gasFill = document.getElementById('gasFill');
     const gasWarning = document.getElementById('gasWarning');
     gasFill.style.width = `${gasPercent * 100}%`;
@@ -693,8 +757,11 @@ async function startGame() {
     state.running = true;
     state.paused = false;
     state.miles = 0;
-    state.gasMiles = TANK_MILES;
-    state.shields = MAX_SHIELDS;
+    // Shop is run-scoped — wipe it BEFORE reading tankMiles()/maxShields(), or
+    // the new run would launch with the last run's upgrades baked into the tank.
+    resetShop();
+    state.gasMiles = tankMiles();
+    state.shields = maxShields();
     state.ship.x = 120;
     state.ship.y = CANVAS_H / 2;
     state.asteroids = [];
@@ -740,6 +807,7 @@ async function endGame(victory = false) {
     document.getElementById('finalBonus').textContent = bonus.toLocaleString();
     document.getElementById('finalDistance').textContent = final.toLocaleString();
     document.getElementById('finalTier').textContent = TIERS[state.beltIndex].name;
+    renderShopSummary();
 
     // Warp runs are excluded from the leaderboard; still fetch scores so they display
     const entry = document.getElementById('highScoreEntry');
