@@ -619,6 +619,14 @@ header h1 .title-gradient {
 }
 .shop-item.equipped .si-badge { color: #0a2a12; background: #4ade80; }
 
+/* Staged: previewed on the ship, not paid for until Continue */
+.shop-item.staged {
+    border-color: #facc15;
+    background: rgba(250, 204, 21, 0.14);
+    border-style: dashed;
+}
+.shop-item.staged .si-badge { color: #2a1f02; background: #facc15; }
+
 .shop-item.maxed { border-color: rgba(74, 222, 128, 0.45); }
 .shop-item.maxed .si-badge { color: #a7f3d0; background: rgba(74, 222, 128, 0.16); }
 

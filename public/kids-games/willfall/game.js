@@ -187,10 +187,13 @@ const SHIP_SKINS = [
 // Single entry point for every ship render — belt, planet, transitions, previews.
 // Routes the skin's own palette through the shop so equipped paint applies
 // everywhere at once. Falls back to the stock palette if shop.js never loaded.
-function drawShipSkin(c, thrusting, skinIdx) {
+// `pal` overrides the equipped paint — the shop passes its draft palette so a
+// staged paint previews before it is paid for.
+function drawShipSkin(c, thrusting, skinIdx, pal) {
     const skin = SHIP_SKINS[skinIdx === undefined ? state.shipSkin : skinIdx];
-    const pal = typeof activePalette === 'function' ? activePalette(skin) : skin.palette;
-    skin.draw(c, thrusting, pal);
+    const palette = pal ||
+        (typeof activePalette === 'function' ? activePalette(skin) : skin.palette);
+    skin.draw(c, thrusting, palette);
 }
 
 const TIERS = [

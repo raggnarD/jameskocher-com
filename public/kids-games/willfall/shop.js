@@ -640,22 +640,29 @@ function groupLabel(g) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shop state
+//
+// A visit works on a DRAFT copy of the shop. Clicking an item stages it — it
+// shows up in the preview straight away, but no token is actually spent until
+// Continue commits the draft. Clicking a staged item again cancels it and hands
+// the token back, so the player can try things on freely.
 // ─────────────────────────────────────────────────────────────────────────────
 let shopTab = 'interior';
 let shopDone = null;        // what to run when the player continues
 let shopStage = 'belt';
 let shopToastTimer = null;
+let draft = null;           // staged shop state while the overlay is open
 
 function resetShop() {
     state.shop = { tokens: 0, owned: {}, equipped: {}, upgrades: {} };
     shopTab = 'interior';
     shopDone = null;
+    draft = null;
 }
 
-// Equipped paint merged over the ship's own colors. Called from drawShipSkin()
-// on every ship render, so it must stay cheap and never throw.
-function activePalette(skin) {
-    const id = state.shop && state.shop.equipped ? state.shop.equipped.paint : null;
+// Equipped paint merged over the ship's own colors, for whichever shop state is
+// asked about — committed for the live game, the draft for the shop preview.
+function paletteFor(skin, sh) {
+    const id = sh && sh.equipped ? sh.equipped.paint : null;
     const paint = id ? SHOP_INDEX[id] : null;
     if (!paint) return skin.palette;
     return {
@@ -668,6 +675,12 @@ function activePalette(skin) {
     };
 }
 
+// Called from drawShipSkin() on every ship render, so it must stay cheap and
+// never throw. Always reads committed state — a staged paint is a preview only.
+function activePalette(skin) {
+    return paletteFor(skin, state.shop);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle — the shop is a paused overlay, exactly like the math modal, so the
 // phase machine in loop()/draw() needs no new state. The frozen stage keeps
@@ -678,12 +691,40 @@ function openShop(afterStage, onDone) {
     state.paused = true;
     shopStage = afterStage;
     shopDone = onDone;
+    draft = {
+        tokens: state.shop.tokens,
+        owned: Object.assign({}, state.shop.owned),
+        equipped: Object.assign({}, state.shop.equipped),
+        upgrades: Object.assign({}, state.shop.upgrades)
+    };
     updateHUD();
     renderShop();
     document.getElementById('shopScreen').classList.remove('hidden');
 }
 
+// Nothing is charged until here. Capacity upgrades top the player up on commit,
+// by however many levels were staged — a max you can't fill feels broken.
+function commitDraft() {
+    if (!draft) return;
+    const sh = state.shop;
+    const addedShields = (draft.upgrades.shieldPlate || 0) - (sh.upgrades.shieldPlate || 0);
+    const addedTanks   = (draft.upgrades.bigTank || 0) - (sh.upgrades.bigTank || 0);
+
+    sh.tokens = draft.tokens;
+    sh.owned = draft.owned;
+    sh.equipped = draft.equipped;
+    sh.upgrades = draft.upgrades;
+    draft = null;
+
+    // Read the new caps only after the draft is committed.
+    if (addedShields > 0) state.shields = Math.min(maxShields(), state.shields + addedShields);
+    if (addedTanks > 0) {
+        state.gasMiles = Math.min(tankMiles(), state.gasMiles + TANK_MILES * 0.30 * addedTanks);
+    }
+}
+
 function closeShop() {
+    commitDraft();
     document.getElementById('shopScreen').classList.add('hidden');
     state.paused = false;
     state.lastFrameTs = 0;
@@ -702,38 +743,56 @@ function shopToast(msg) {
     shopToastTimer = setTimeout(() => el.classList.remove('visible'), 1400);
 }
 
-// One click handles buy, equip and put-away. Owned items are free to re-equip,
-// so a slot can be toggled between things you already bought.
+// One click stages, previews and un-stages. Nothing is charged here — the token
+// count shown is the draft's, and Continue is what actually spends it.
 function shopClick(id) {
     const entry = SHOP_INDEX[id];
-    if (!entry) return;
-    const sh = state.shop;
+    if (!entry || !draft) return;
+    const sh = state.shop;                      // committed, for "did I already own this?"
 
     if (entry.kind === 'upgrade') {
-        const lvl = sh.upgrades[id] || 0;
-        if (lvl >= entry.max) { shopToast(`${entry.name} is maxed out`); return; }
-        if (sh.tokens < 1) { shopToast('Not enough tokens — finish a stage first'); return; }
-        sh.tokens -= 1;
-        sh.upgrades[id] = lvl + 1;
-        // Capacity upgrades top you up on the spot; a max you can't fill feels broken.
-        if (id === 'shieldPlate') state.shields = Math.min(maxShields(), state.shields + 1);
-        if (id === 'bigTank') state.gasMiles = Math.min(tankMiles(), state.gasMiles + TANK_MILES * 0.30);
-        shopToast(`${entry.emoji} ${entry.name} installed!`);
-    } else {
-        if (!sh.owned[id]) {
-            if (sh.tokens < 1) { shopToast('Not enough tokens — finish a stage first'); return; }
-            sh.tokens -= 1;
-            sh.owned[id] = true;
-            sh.equipped[entry.slot] = id;
-            shopToast(`${entry.emoji} ${entry.name} added!`);
-        } else if (sh.equipped[entry.slot] === id) {
-            delete sh.equipped[entry.slot];      // click what's in use to put it away
+        // Clicks stack levels while there are tokens and headroom; the click that
+        // can't stack any further puts the whole staged stack back, so there is
+        // always a way out without a separate undo control.
+        const owned = sh.upgrades[id] || 0;
+        const staged = draft.upgrades[id] || 0;
+        if (staged < entry.max && draft.tokens >= 1) {
+            draft.upgrades[id] = staged + 1;
+            draft.tokens -= 1;
+            shopToast(`${entry.emoji} ${entry.name} Lv ${staged + 1} — installs when you continue`);
+        } else if (staged > owned) {
+            draft.upgrades[id] = owned;
+            draft.tokens += staged - owned;
+            shopToast(`${entry.name} — put back`);
+        } else if (staged >= entry.max) {
+            shopToast(`${entry.name} is maxed out`);
         } else {
-            sh.equipped[entry.slot] = id;
+            shopToast('Not enough tokens — finish a stage first');
+        }
+    } else {
+        const owned = !!sh.owned[id];
+        const stagedBuy = !owned && !!draft.owned[id];
+        if (stagedBuy) {
+            // Cancel: refund and put the slot back to whatever the run had committed.
+            delete draft.owned[id];
+            draft.tokens += 1;
+            if (sh.equipped[entry.slot] !== undefined) draft.equipped[entry.slot] = sh.equipped[entry.slot];
+            else delete draft.equipped[entry.slot];
+            shopToast(`${entry.name} — put back`);
+        } else if (owned) {
+            // Already paid for in an earlier visit: swapping it in and out is free.
+            if (draft.equipped[entry.slot] === id) delete draft.equipped[entry.slot];
+            else draft.equipped[entry.slot] = id;
+        } else if (draft.tokens < 1) {
+            shopToast('Not enough tokens — finish a stage first');
+        } else {
+            draft.tokens -= 1;
+            draft.owned[id] = true;
+            draft.equipped[entry.slot] = id;
+            shopToast(`${entry.emoji} ${entry.name} — try it on!`);
         }
     }
 
-    updateHUD();
     renderShop();
 }
 
@@ -744,24 +803,40 @@ function itemButton(item, kind, slot) {
     const sh = state.shop;
     let badge, cls = '';
     if (kind === 'upgrades') {
-        const lvl = sh.upgrades[item.id] || 0;
-        if (lvl >= item.max) { badge = `Max ${lvl}/${item.max}`; cls = ' maxed'; }
-        else if (lvl > 0) { badge = `Lv ${lvl}/${item.max} · 1🪙`; cls = ' owned'; }
+        const owned = sh.upgrades[item.id] || 0;
+        const staged = draft.upgrades[item.id] || 0;
+        const canStack = staged < item.max && draft.tokens >= 1;
+        if (staged > owned) {
+            badge = `Buying Lv ${staged} · tap ${canStack ? 'for more' : 'to undo'}`;
+            cls = ' staged';
+        } else if (staged >= item.max) { badge = `Max ${staged}/${item.max}`; cls = ' maxed'; }
+        else if (staged > 0) { badge = `Lv ${staged}/${item.max} · 1🪙`; cls = ' owned'; }
         else badge = '1🪙';
-        if (lvl < item.max && sh.tokens < 1) cls += ' locked';
-    } else if (sh.equipped[slot] === item.id) {
+        if (staged <= owned && staged < item.max && draft.tokens < 1) cls += ' locked';
+    } else if (!sh.owned[item.id] && draft.owned[item.id]) {
+        badge = 'Buying · tap to undo'; cls = ' staged';
+    } else if (draft.equipped[slot] === item.id) {
         badge = 'In use'; cls = ' owned equipped';
     } else if (sh.owned[item.id]) {
         badge = 'Owned'; cls = ' owned';
     } else {
         badge = '1🪙';
-        if (sh.tokens < 1) cls = ' locked';
+        if (draft.tokens < 1) cls = ' locked';
     }
     const desc = item.desc ? `<span class="si-desc">${item.desc}</span>` : '';
     return `<button class="shop-item${cls}" data-id="${item.id}">` +
         `<span class="si-emoji">${item.emoji}</span>` +
         `<span class="si-name">${item.name}</span>${desc}` +
         `<span class="si-badge">${badge}</span></button>`;
+}
+
+// How many tokens the draft will actually spend when the player continues.
+function stagedCost() {
+    const sh = state.shop;
+    let n = 0;
+    for (const id of Object.keys(draft.owned)) if (!sh.owned[id]) n++;
+    for (const [id, lvl] of Object.entries(draft.upgrades)) n += lvl - (sh.upgrades[id] || 0);
+    return n;
 }
 
 function renderGroups(groups, kind) {
@@ -775,12 +850,12 @@ function renderGroups(groups, kind) {
 }
 
 function renderShop() {
-    const sh = state.shop;
+    if (!draft) return;
     const tier = TIERS[state.beltIndex];
     const what = shopStage === 'belt' ? 'belt' : 'planet';
     document.getElementById('shopSubtitle').textContent =
         `${tier.emoji} ${tier.name} ${what} cleared — here's your token.`;
-    document.getElementById('shopTokens').textContent = `🪙 ${sh.tokens}`;
+    document.getElementById('shopTokens').textContent = `🪙 ${draft.tokens}`;
 
     document.querySelectorAll('.shop-tab').forEach(t =>
         t.classList.toggle('active', t.dataset.tab === shopTab));
@@ -790,8 +865,13 @@ function renderShop() {
     else if (shopTab === 'exterior') body.innerHTML = renderGroups(SHOP_CATALOG.exterior, 'exterior');
     else                             body.innerHTML = renderGroups(SHOP_CATALOG.upgrades, 'upgrades');
 
-    document.getElementById('shopContinue').textContent =
-        sh.tokens > 0 ? `🚀 Continue (bank ${sh.tokens} 🪙)` : '🚀 Continue';
+    // The button says exactly what continuing will charge, because that is the
+    // only moment anything is charged.
+    const cost = stagedCost();
+    const bank = draft.tokens > 0 ? ` · bank ${draft.tokens} 🪙` : '';
+    document.getElementById('shopContinue').textContent = cost > 0
+        ? `✅ Buy ${cost} & Continue${bank}`
+        : `🚀 Continue${bank}`;
 
     drawShopPreview();
 }
@@ -822,8 +902,9 @@ function previewStars(c, W, H) {
 
 function drawInteriorPreview(c, W, H) {
     const skin = SHIP_SKINS[state.shipSkin];
-    const pal = activePalette(skin);
-    const sh = state.shop;
+    // Preview reads the draft, so staged items show before a token is spent.
+    const sh = draft || state.shop;
+    const pal = paletteFor(skin, sh);
 
     c.fillStyle = '#05050f';
     c.fillRect(0, 0, W, H);
@@ -911,13 +992,14 @@ function drawExteriorPreview(c, W, H) {
     c.beginPath(); c.arc(W * 0.5, H + 150, 190, 0, Math.PI * 2); c.fill();
     c.restore();
 
+    const sh = draft || state.shop;
     c.save();
     c.translate(W / 2, H / 2 - 10);
     c.scale(2.6, 2.6);
-    drawShipSkin(c, false, state.shipSkin);
+    drawShipSkin(c, false, state.shipSkin, paletteFor(SHIP_SKINS[state.shipSkin], sh));
     c.restore();
 
-    const paint = SHOP_INDEX[state.shop.equipped.paint];
+    const paint = SHOP_INDEX[sh.equipped.paint];
     c.fillStyle = 'rgba(255,255,255,0.85)';
     c.font = 'bold 15px -apple-system, system-ui, sans-serif';
     c.textAlign = 'center';
