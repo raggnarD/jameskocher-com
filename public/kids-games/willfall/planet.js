@@ -461,9 +461,13 @@ function beginNextBelt() {
     state.miles = TIERS[state.beltIndex].miles;
     state.phase = 'belt';
     state.asteroids = [];
+    state.shards = [];
+    state.stuckAsteroid = null;
     state.spawnTimer = 0;
     state.ship.x = 120;
     state.ship.y = CANVAS_H / 2;
+    state.camY = 0;
+    initBackdrop(state.beltIndex);   // every belt gets its own sky
     state.tierBanner = 2.2;
     updateHUD();
 }
@@ -520,12 +524,7 @@ function drawPlanetScene() {
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
     // A few stars still visible in the thin atmosphere
-    ctx.fillStyle = '#ffffff';
-    for (const s of state.stars) {
-        if (s.y > CANVAS_H * 0.55) continue;
-        ctx.globalAlpha = s.z * 0.5 * sceneAlpha;
-        ctx.fillRect(s.x, s.y, s.size, s.size);
-    }
+    drawBackdrop({ alpha: 0.5 * sceneAlpha, starsOnly: true, maxY: CANVAS_H * 0.55 });
     ctx.globalAlpha = sceneAlpha;
 
     drawHills(p);
@@ -832,12 +831,8 @@ function drawTransition() {
         // Space, with the planet swelling from below and the ship arcing down
         ctx.fillStyle = '#02020a';
         ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-        ctx.fillStyle = '#ffffff';
-        for (const s of state.stars) {
-            ctx.globalAlpha = s.z;
-            ctx.fillRect(s.x, s.y + k * 60 * s.z, s.size, s.size);
-        }
-        ctx.globalAlpha = 1;
+        // Backdrop drifts down as the ship drops toward the planet
+        drawBackdrop({ camY: state.camY - k * 60 });
 
         const tier = TIERS[state.beltIndex];
         const rad = 120 + k * 900;
@@ -853,7 +848,8 @@ function drawTransition() {
         ctx.stroke();
 
         const sx = 120 + (CANVAS_W * 0.62 - 120) * k;
-        const sy = state.ship.y + (cy - rad - 30 - state.ship.y) * k;
+        const shipY = shipScreenY();          // the belt camera may be far from y=0
+        const sy = shipY + (cy - rad - 30 - shipY) * k;
         const scale = 1 - 0.65 * k;
         ctx.save();
         ctx.translate(sx, sy);
@@ -886,12 +882,7 @@ function drawAscent(tr, p) {
     // Space first — the surface is painted over it and fades as we climb
     ctx.fillStyle = '#02020a';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    ctx.fillStyle = '#ffffff';
-    for (const st of state.stars) {
-        ctx.globalAlpha = st.z * Math.min(1, climb * 1.5 + exit);
-        ctx.fillRect(st.x, st.y, st.size, st.size);
-    }
-    ctx.globalAlpha = 1;
+    drawBackdrop({ camY: state.camY, alpha: Math.min(1, climb * 1.5 + exit) });
 
     let rocketX = CANVAS_W * 0.5, rocketY = CANVAS_H * 0.55;
     if (p) {

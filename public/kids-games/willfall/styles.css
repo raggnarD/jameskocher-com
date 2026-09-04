@@ -409,6 +409,135 @@ header h1 .title-gradient {
     border-radius: 2px;
 }
 
+/* Inline fraction inside a question — numerator over denominator */
+.math-question .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    line-height: 1;
+    margin: 0 0.12em;
+    font-size: 0.72em;
+}
+
+.math-question .frac .fr-n { padding: 0 0.28em 2px; }
+
+.math-question .frac .fr-d {
+    padding: 2px 0.28em 0;
+    border-top: 3px solid #e0e0ff;
+}
+
+/* Fraction slider answer */
+.frac-answer { margin: 6px auto 4px; width: min(360px, 100%); }
+.frac-answer.hidden { display: none; }
+.math-input.hidden { display: none; }
+
+.frac-bar {
+    position: relative;
+    height: 42px;
+    border-radius: 10px;
+    border: 2px solid rgba(120, 140, 220, 0.45);
+    background: rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+}
+
+.frac-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0;
+    background: linear-gradient(180deg, #7aa8ff, #4a6ed0);
+    transition: width 0.08s linear;
+}
+
+.frac-ticks {
+    position: absolute;
+    inset: 0;
+    display: flex;
+}
+
+.frac-ticks span {
+    flex: 1 1 0;
+    border-right: 1px solid rgba(224, 224, 255, 0.35);
+}
+
+.frac-ticks span:last-child { border-right: none; }
+
+#fracSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    margin: 10px 0 4px;
+    background: transparent;
+}
+
+#fracSlider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(120, 140, 220, 0.45);
+}
+
+#fracSlider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(120, 140, 220, 0.45);
+}
+
+#fracSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    margin-top: -11px;
+    border-radius: 50%;
+    background: #ffd56b;
+    border: 3px solid #08081a;
+    cursor: pointer;
+}
+
+#fracSlider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ffd56b;
+    border: 3px solid #08081a;
+    cursor: pointer;
+}
+
+#fracSlider:focus { outline: none; }
+#fracSlider:focus::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(122, 168, 255, 0.4); }
+#fracSlider:focus::-moz-range-thumb { box-shadow: 0 0 0 4px rgba(122, 168, 255, 0.4); }
+
+.frac-preview {
+    min-height: 3.2rem;
+    font-size: 2rem;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4em;
+}
+
+.frac-preview .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.frac-preview .frac .fr-n { padding: 0 0.3em 2px; }
+
+.frac-preview .frac .fr-d {
+    padding: 2px 0.3em 0;
+    border-top: 3px solid #e0e0ff;
+}
+
+.frac-preview .frac-pct {
+    align-self: flex-end;
+    padding-bottom: 4px;
+    font-size: 0.95rem;
+    color: #9fb0e0;
+}
+
 .math-input {
     width: 200px;
     font-size: 1.8rem;

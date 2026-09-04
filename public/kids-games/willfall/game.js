@@ -224,9 +224,11 @@ const state = {
     miles: 0,
     gasMiles: TANK_MILES,    // gas remaining in miles
     shields: MAX_SHIELDS,
-    ship: { x: 120, y: CANVAS_H / 2 },
+    ship: { x: 120, y: CANVAS_H / 2 },   // y is a WORLD coord — the belt is endless vertically
+    camY: 0,                 // world y of the top of the screen
     asteroids: [],
-    stars: [],
+    shards: [],              // exploding-asteroid debris
+    stuckAsteroid: null,     // the rock lodged in the hull while its math is open
     spawnTimer: 0,
     lastFrameTs: 0,
     mathPending: null,       // { reason: 'gas'|'hit', resume: fn, onWrong: fn }
@@ -274,8 +276,10 @@ let warpBuffer = [];
 window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     keys[k] = true;
-    // Prevent page scroll for arrow keys + space when game running
-    if (state.running && ['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+    // Prevent page scroll for arrow keys + space when game running. Not while a
+    // math problem is up — the fraction slider is driven by the arrow keys.
+    if (state.running && !state.mathPending &&
+        ['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
 
     // Warp easter egg — only active while playing (not paused for math)
     if (state.running && !state.paused && /^[a-z]$/.test(k)) {
@@ -296,18 +300,30 @@ window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
 function keyHeld(...names) { return names.some(n => keys[n.toLowerCase()]); }
 
-// Starfield background
-function initStars() {
-    state.stars = [];
-    for (let i = 0; i < 120; i++) {
-        state.stars.push({
-            x: Math.random() * CANVAS_W,
-            y: Math.random() * CANVAS_H,
-            z: Math.random() * 0.8 + 0.2,
-            size: Math.random() * 1.5 + 0.5
-        });
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Vertical camera — the belt has no floor or ceiling. The ship's y is a world
+// coordinate and the camera trails it through a dead zone: it only pans once
+// the ship pushes out of the middle half of the screen, so ordinary dodging
+// still moves the ship on screen instead of dragging the whole world with it.
+// ─────────────────────────────────────────────────────────────────────────────
+const CAM_DEAD_TOP = 0.25;      // fraction of the screen the dead zone starts at
+const CAM_DEAD_BOT = 0.75;
+const BAND_MULT = 2;            // asteroid field is this many screens tall
+const MAX_ASTEROIDS = 120;      // perf guard — the field never needs more
+
+function shipScreenY() { return state.ship.y - state.camY; }
+
+function updateCamera() {
+    const top = state.camY + CANVAS_H * CAM_DEAD_TOP;
+    const bot = state.camY + CANVAS_H * CAM_DEAD_BOT;
+    if (state.ship.y < top) state.camY = state.ship.y - CANVAS_H * CAM_DEAD_TOP;
+    else if (state.ship.y > bot) state.camY = state.ship.y - CANVAS_H * CAM_DEAD_BOT;
 }
+
+// The band of world the asteroid field is kept alive in — half a screen of
+// margin above and below what the player can see.
+function bandTop() { return state.camY - CANVAS_H * (BAND_MULT - 1) / 2; }
+function bandHeight() { return CANVAS_H * BAND_MULT; }
 
 // Each tier beyond Rock adds 10% to spawn rate, asteroid speed, and angular variance.
 // Rock(0)=1.0, Bronze(1)=1.10, Silver(2)=1.20, ..., Obsidian(9)=1.90.
@@ -315,15 +331,17 @@ function difficultyMult(tierIndex) {
     return 1 + 0.10 * tierIndex;
 }
 
-function spawnAsteroid(tierIndex) {
+// x/y default to a fresh rock entering from the right edge, anywhere in the band.
+function spawnAsteroid(tierIndex, x, y) {
+    if (state.asteroids.length >= MAX_ASTEROIDS) return;
     const tier = TIERS[tierIndex];
     const mult = difficultyMult(tierIndex);
     const baseSpeed = 140 * mult;                              // px/sec drift left
     const speed = baseSpeed + Math.random() * 80 * mult;       // variance also scales
     const radius = 18 + Math.random() * (34 * Math.min(mult, 1.5));  // 18-52 px at Rock, scales with tier
     state.asteroids.push({
-        x: CANVAS_W + radius + 10,
-        y: Math.random() * (CANVAS_H - 2 * radius) + radius,
+        x: x === undefined ? CANVAS_W + radius + 10 : x,
+        y: y === undefined ? bandTop() + Math.random() * bandHeight() : y,
         vx: -speed,
         vy: (Math.random() - 0.5) * 30 * mult,                 // wider vy = more angles
         r: radius,
@@ -338,7 +356,27 @@ function spawnAsteroid(tierIndex) {
 function spawnIntervalMs(tierIndex) {
     const base = 800;   // Rock spawns every ~0.8 s; higher tiers get proportionally faster
     const min = 280;
-    return Math.max(min, Math.round(base / difficultyMult(tierIndex)));
+    // Rocks now enter across a band BAND_MULT screens tall, so the same interval
+    // would leave only 1/BAND_MULT as many of them in view. Spawn that much faster.
+    return Math.max(min, Math.round(base / difficultyMult(tierIndex))) / BAND_MULT;
+}
+
+// Climbing or diving pulls a strip of never-populated sky into the band. Seed it
+// with rocks already mid-flight — at the field's current density — so the player
+// crosses the old screen boundary into more of the same, never a clear lane.
+function backfillBand(tierIndex, y0, y1) {
+    const h = y1 - y0;
+    if (h <= 0) return;
+    // Rocks per world-pixel of band, from the spawn rate and how long one takes
+    // to cross: interval ms per rock, ~CANVAS_W / speed seconds to cross.
+    const crossSec = CANVAS_W / (170 * difficultyMult(tierIndex));
+    const perBand = (crossSec * 1000) / spawnIntervalMs(tierIndex);
+    const expected = perBand * (h / bandHeight());
+    let n = Math.floor(expected);
+    if (Math.random() < expected - n) n++;
+    for (let i = 0; i < n; i++) {
+        spawnAsteroid(tierIndex, Math.random() * (CANVAS_W + 60), y0 + Math.random() * h);
+    }
 }
 
 // Main loop
@@ -378,12 +416,23 @@ function update(dt) {
     const right = keyHeld('arrowright', 'd');
     const thrusting = right && state.gasMiles > 0;
 
-    // Vertical-only ship movement — x stays locked at launch position
+    // Vertical-only ship movement — x stays locked at launch position, and y is
+    // unbounded: up and down run forever.
     let vy = 0;
     if (up) vy -= 1;
     if (down) vy += 1;
+    const prevTop = bandTop();
     state.ship.y += vy * SHIP_MOVE_PX_PER_SEC * dt;
-    state.ship.y = Math.max(SHIP_H / 2, Math.min(CANVAS_H - SHIP_H / 2, state.ship.y));
+    updateCamera();
+
+    // The band moved with the camera — populate whichever edge just uncovered
+    // fresh sky before anything in it is drawn.
+    const newTop = bandTop();
+    if (newTop < prevTop) backfillBand(state.beltIndex, newTop, Math.min(prevTop, newTop + bandHeight()));
+    else if (newTop > prevTop) {
+        const from = Math.max(prevTop + bandHeight(), newTop);
+        backfillBand(state.beltIndex, from, newTop + bandHeight());
+    }
 
     const scrollRate = thrusting ? BOOST_SCROLL_RATE : IDLE_SCROLL_RATE;
 
@@ -424,21 +473,22 @@ function update(dt) {
     }
 
     for (const a of state.asteroids) {
+        if (a.stuck) continue;                 // pinned to the hull until its math is answered
         a.x += a.vx * scrollRate * dt;
         a.y += a.vy * scrollRate * dt;
         a.rot += a.rotSpeed * dt;
     }
-    state.asteroids = state.asteroids.filter(a => a.x + a.r > -10);
+    const camMid = state.camY + CANVAS_H / 2;
+    state.asteroids = state.asteroids.filter(a =>
+        a.stuck || (a.x + a.r > -10 && Math.abs(a.y - camMid) < CANVAS_H * 1.6));
 
-    // Stars parallax — idle drift matches the visible scroll rate
-    const starDrift = thrusting ? 80 : 20;
-    for (const s of state.stars) {
-        s.x -= starDrift * s.z * dt;
-        if (s.x < 0) { s.x = CANVAS_W; s.y = Math.random() * CANVAS_H; }
-    }
+    // Backdrop parallax — idle drift matches the visible scroll rate
+    advanceBackdrop(dt, thrusting ? 80 : 20);
+    updateShards(dt);
 
     // Collisions
     for (const a of state.asteroids) {
+        if (a.stuck) continue;
         if (circleHitsShip(a)) {
             handleShipHit(a);
             break;
@@ -459,12 +509,103 @@ function circleHitsShip(a) {
 }
 
 function handleShipHit(asteroid) {
-    // Remove asteroid, drop shield, queue math
-    state.asteroids = state.asteroids.filter(x => x !== asteroid);
+    // The rock stays lodged in the hull while the math is up — solving it is what
+    // blows it apart. Freeze it and take it out of the collision loop.
+    asteroid.stuck = true;
+    asteroid.vx = 0;
+    asteroid.vy = 0;
+    asteroid.rotSpeed = 0;
+    state.stuckAsteroid = asteroid;
     state.shields -= 1;
     flashCanvas('#ff6b6b');
-    if (state.shields <= 0) { endGame(); return; }
+    if (state.shields <= 0) { clearStuckAsteroid(); endGame(); return; }
     triggerHitMath();
+}
+
+// Drop the lodged rock without a blast — game over, warp, or belt boundary.
+function clearStuckAsteroid() {
+    if (!state.stuckAsteroid) return;
+    state.asteroids = state.asteroids.filter(a => a !== state.stuckAsteroid);
+    state.stuckAsteroid = null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Asteroid explosion — the reward for a correct answer. Same shape as the
+// surface stage's knocked-loose debris (spawnDebris/drawDebris in planet.js),
+// minus gravity: shards fly straight out and fade.
+// ─────────────────────────────────────────────────────────────────────────────
+const SHARD_LIFE = 0.9;
+
+function explodeAsteroid(a) {
+    if (!a) return;
+    state.asteroids = state.asteroids.filter(x => x !== a);
+    if (state.stuckAsteroid === a) state.stuckAsteroid = null;
+
+    const count = 8 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < count; i++) {
+        const ang = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+        const speed = 90 + Math.random() * 230;
+        state.shards.push({
+            x: a.x + Math.cos(ang) * a.r * 0.35,
+            y: a.y + Math.sin(ang) * a.r * 0.35,
+            vx: Math.cos(ang) * speed,
+            vy: Math.sin(ang) * speed,
+            r: a.r * (0.16 + Math.random() * 0.26),
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 12,
+            life: SHARD_LIFE,
+            maxLife: SHARD_LIFE,
+            color: a.color
+        });
+    }
+    // One expanding ring so the burst reads even against a busy field
+    state.shards.push({
+        ring: true, x: a.x, y: a.y, vx: 0, vy: 0, r: a.r,
+        life: 0.45, maxLife: 0.45, glow: a.glow, color: a.glow
+    });
+    flashCanvas('#ffd56b');
+}
+
+function updateShards(dt) {
+    for (const s of state.shards) {
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.vx *= 1 - 0.9 * dt;              // light drag so the burst settles
+        s.vy *= 1 - 0.9 * dt;
+        if (s.rotSpeed) s.rot += s.rotSpeed * dt;
+        s.life -= dt;
+    }
+    state.shards = state.shards.filter(s => s.life > 0);
+}
+
+function drawShards() {
+    for (const s of state.shards) {
+        const t = Math.max(0, s.life / s.maxLife);
+        ctx.save();
+        if (s.ring) {
+            ctx.globalAlpha = t * 0.8;
+            ctx.strokeStyle = s.glow;
+            ctx.lineWidth = 2 + 4 * t;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r * (1 + (1 - t) * 2.2), 0, Math.PI * 2);
+            ctx.stroke();
+        } else {
+            ctx.globalAlpha = Math.min(1, t * 1.6);
+            ctx.translate(s.x, s.y);
+            ctx.rotate(s.rot);
+            ctx.fillStyle = s.color;
+            ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-s.r, s.r * 0.6);
+            ctx.lineTo(0, -s.r);
+            ctx.lineTo(s.r, s.r * 0.4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
 }
 
 // TURBO now skips to the *next stage*, not the next belt:
@@ -478,7 +619,9 @@ function warpSkip() {
 
     if (state.phase === 'belt') {
         state.miles = TIERS[state.beltIndex].miles + BELT_LENGTH;
+        state.stuckAsteroid = null;
         state.asteroids = [];
+        state.shards = [];
         state.gasMiles = tankMiles();
         updateHUD();
         openShop('belt', startDescent);
@@ -496,13 +639,15 @@ function triggerGasMath() {
 }
 
 function triggerHitMath() {
+    const hit = state.stuckAsteroid;
     showMath({
         reason: '🪨 Impact! Solve to repair shield systems.',
-        onCorrect: () => {},
+        onCorrect: () => explodeAsteroid(hit),
         onWrong: () => {
             state.shields -= 1;
             flashCanvas('#ff6b6b');
-            if (state.shields <= 0) { hideMath(); endGame(); return true; }
+            // Wrong answer costs a shield and the rock stays lodged for the retry
+            if (state.shields <= 0) { hideMath(); clearStuckAsteroid(); endGame(); return true; }
             return false;
         }
     });
@@ -510,7 +655,10 @@ function triggerHitMath() {
 
 function renderQuestion(mc) {
     const el = document.getElementById('mathQuestion');
-    if (mc.stacked) {
+    if (mc.kind === 'fraction') {
+        el.classList.remove('stacked');
+        el.innerHTML = mc.questionHTML;
+    } else if (mc.stacked) {
         const { a, b, op } = mc.stacked;
         const width = Math.max(String(a).length, String(b).length);
         const pad = (n) => String(n).padStart(width, ' ');
@@ -525,17 +673,52 @@ function renderQuestion(mc) {
     }
 }
 
+// Fraction answers are given on a slider instead of typed. Its notch count is a
+// multiple (×2 or ×3) of the answer's denominator, so the live preview shows an
+// equivalent fraction — 4/10 for 2/5 — and never the answer's own denominator.
+function setAnswerMode(mc) {
+    const numeric = document.getElementById('mathAnswer');
+    const fracBox = document.getElementById('fractionAnswer');
+    const isFrac = mc.kind === 'fraction';
+    numeric.classList.toggle('hidden', isFrac);
+    fracBox.classList.toggle('hidden', !isFrac);
+    numeric.value = '';
+    if (!isFrac) return;
+    const slider = document.getElementById('fracSlider');
+    slider.max = mc.ticks;
+    slider.value = 0;
+    document.getElementById('fracTicks').innerHTML = '<span></span>'.repeat(mc.ticks);
+    updateFracPreview();
+}
+
+function updateFracPreview() {
+    const mc = state.mathCurrent;
+    if (!mc || mc.kind !== 'fraction') return;
+    const v = Number(document.getElementById('fracSlider').value);
+    const frac = v / mc.ticks;
+    document.getElementById('fracFill').style.width = `${frac * 100}%`;
+    document.getElementById('fracPreview').innerHTML =
+        `<span class="frac"><span class="fr-n">${v}</span><span class="fr-d">${mc.ticks}</span></span>` +
+        `<span class="frac-pct">${Math.round(frac * 100)}%</span>`;
+}
+
+function focusMathInput() {
+    const mc = state.mathCurrent;
+    if (!mc) return;
+    document.getElementById(mc.kind === 'fraction' ? 'fracSlider' : 'mathAnswer').focus();
+}
+
 function showMath({ reason, onCorrect, onWrong }) {
     state.paused = true;
     state.mathPending = { reason, onCorrect, onWrong };
     state.mathCurrent = generateMath(state.grade);
     document.getElementById('mathReason').textContent = reason;
     renderQuestion(state.mathCurrent);
-    document.getElementById('mathAnswer').value = '';
+    setAnswerMode(state.mathCurrent);
     document.getElementById('mathFeedback').textContent = '';
     document.getElementById('mathFeedback').className = 'math-feedback';
     document.getElementById('mathModal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('mathAnswer').focus(), 50);
+    setTimeout(focusMathInput, 50);
 }
 
 function hideMath() {
@@ -547,17 +730,29 @@ function hideMath() {
 
 function submitMath() {
     if (!state.mathPending || !state.mathCurrent) return;
-    const input = document.getElementById('mathAnswer').value.trim();
-    if (input === '') return;
-    const guess = Number(input);
+    const mc = state.mathCurrent;
+    let correct, shownAnswer;
+
+    if (mc.kind === 'fraction') {
+        const v = Number(document.getElementById('fracSlider').value);
+        // Cross-multiply so an equivalent notch counts: 4/10 === 2/5
+        correct = v * mc.frac.d === mc.frac.n * mc.ticks;
+        shownAnswer = mc.answerText;
+    } else {
+        const input = document.getElementById('mathAnswer').value.trim();
+        if (input === '') return;
+        correct = Number(input) === mc.answer;
+        shownAnswer = mc.answer;
+    }
+
     const fb = document.getElementById('mathFeedback');
-    if (guess === state.mathCurrent.answer) {
+    if (correct) {
         fb.textContent = '✅ Correct!';
         fb.className = 'math-feedback correct';
         const onCorrect = state.mathPending.onCorrect;
         setTimeout(() => { hideMath(); if (onCorrect) onCorrect(); }, 500);
     } else {
-        fb.textContent = `❌ Not quite — answer was ${state.mathCurrent.answer}. New problem!`;
+        fb.textContent = `❌ Not quite — answer was ${shownAnswer}. New problem!`;
         fb.className = 'math-feedback wrong';
         const onWrong = state.mathPending.onWrong;
         const ended = onWrong ? onWrong() : false;
@@ -567,10 +762,10 @@ function submitMath() {
             if (!state.mathPending) return;
             state.mathCurrent = generateMath(state.grade);
             renderQuestion(state.mathCurrent);
-            document.getElementById('mathAnswer').value = '';
+            setAnswerMode(state.mathCurrent);
             fb.textContent = '';
             fb.className = 'math-feedback';
-            document.getElementById('mathAnswer').focus();
+            focusMathInput();
         }, 1200);
     }
 }
@@ -639,24 +834,27 @@ function drawBelt() {
     ctx.fillStyle = '#02020a';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // Stars
-    for (const s of state.stars) {
-        ctx.globalAlpha = s.z;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(s.x, s.y, s.size, s.size);
-    }
-    ctx.globalAlpha = 1;
-
-    // Tier band
+    // Tier band — a base wash the backdrop is painted over, so nebulae and stars
+    // keep their contrast instead of being flattened by it
     const tier = TIERS[state.beltIndex];
     ctx.fillStyle = tier.color + '22';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
+    // Parallax stars, nebulae and distant worlds — scrolls with the camera
+    drawBackdrop({ camY: state.camY });
+
+    // Everything below is in world space — the camera only moves vertically
+    ctx.save();
+    ctx.translate(0, -state.camY);
+
     // Asteroids
     for (const a of state.asteroids) drawAsteroid(a);
+    drawShards();
 
     // Ship
     drawShip(state.ship.x, state.ship.y, keyHeld('arrowright', 'd') && state.gasMiles > 0);
+
+    ctx.restore();
 
     // Tier banner at top
     ctx.fillStyle = '#ffffffcc';
@@ -767,7 +965,10 @@ async function startGame() {
     state.shields = maxShields();
     state.ship.x = 120;
     state.ship.y = CANVAS_H / 2;
+    state.camY = 0;
     state.asteroids = [];
+    state.shards = [];
+    state.stuckAsteroid = null;
     state.spawnTimer = 0;
     state.lastFrameTs = 0;
     state.cheated = false;
@@ -779,7 +980,7 @@ async function startGame() {
     state.transition = null;
     state.tierBanner = 0;
     warpBuffer = [];
-    initStars();
+    initBackdrop(0);
     showPlanetHUD(false);
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.add('hidden');
@@ -909,6 +1110,10 @@ document.getElementById('mathSubmit').addEventListener('click', submitMath);
 document.getElementById('mathAnswer').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') submitMath();
 });
+document.getElementById('fracSlider').addEventListener('input', updateFracPreview);
+document.getElementById('fracSlider').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitMath();
+});
 
 document.getElementById('saveScoreBtn').addEventListener('click', async () => {
     const raw = document.getElementById('initialsInput').value || '';
@@ -952,7 +1157,7 @@ wireTabs('hsTabsEnd', 'highScoreListEnd');
     await renderHighScores('highScoreList', 'global');
     updateModeBadges();
 })();
-initStars();
+initBackdrop(0);
 renderShipPreviews();
 updateHUD();
 requestAnimationFrame(loop);
