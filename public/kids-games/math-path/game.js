@@ -306,6 +306,13 @@ const GRADES = [
     { id: '5', label: '5th', sub: 'Fractions' }
 ];
 
+// The board row on the setup screen: Adventure first (the default), then each
+// fixed size on its own. Adventure walks SIZES in order, one board per rung.
+const BOARD_CHOICES = [
+    { id: 'adventure', label: '⭐ Adventure', sub: '5×5 → 10×10', cls: 'choice-adventure' },
+    ...SIZES.map(s => ({ id: String(s.n), label: s.label, sub: s.sub }))
+];
+
 const TURNS_PER_GATE = 5;
 
 // Faces, hands, animals — plus 👀 and 🧠. Deliberately no people,
@@ -343,8 +350,12 @@ const WALKERS = [
 const el = (id) => document.getElementById(id);
 
 const State = {
-    size: Number(localStorage.getItem('mathpath.size')) || 5,
+    boardChoice: localStorage.getItem('mathpath.boardChoice') || 'adventure',
     grade: localStorage.getItem('mathpath.grade') || 'K',
+    mode: 'adventure',           // 'adventure' | 'free'
+    stage: 0,                    // index into SIZES, adventure only
+    size: SIZES[0].n,
+    adventureDone: false,
     board: null,
     turnsLeft: TURNS_PER_GATE,
     solved: 0,
@@ -361,7 +372,7 @@ function buildChooser(host, items, valueOf, isSelected, onPick) {
     host.innerHTML = '';
     for (const item of items) {
         const btn = document.createElement('button');
-        btn.className = 'choice' + (isSelected(item) ? ' selected' : '');
+        btn.className = 'choice' + (item.cls ? ' ' + item.cls : '') + (isSelected(item) ? ' selected' : '');
         btn.innerHTML = `<span class="choice-label">${item.label}</span><span class="choice-sub">${item.sub}</span>`;
         btn.addEventListener('click', () => {
             onPick(valueOf(item));
@@ -373,15 +384,23 @@ function buildChooser(host, items, valueOf, isSelected, onPick) {
     }
 }
 
+function renderChooserNote() {
+    el('chooserNote').textContent = State.boardChoice === 'adventure'
+        ? 'Work up the ladder: 5×5, 6×6, 7×7, 8×8, then 10×10.'
+        : 'One size, board after board, for as long as you like.';
+}
+
 function renderSetup() {
-    buildChooser(el('sizeChooser'), SIZES, s => s.n, s => s.n === State.size, (n) => {
-        State.size = n;
-        localStorage.setItem('mathpath.size', String(n));
-    });
     buildChooser(el('gradeChooser'), GRADES, g => g.id, g => g.id === State.grade, (g) => {
         State.grade = g;
         localStorage.setItem('mathpath.grade', g);
     });
+    buildChooser(el('sizeChooser'), BOARD_CHOICES, b => b.id, b => b.id === State.boardChoice, (id) => {
+        State.boardChoice = id;
+        localStorage.setItem('mathpath.boardChoice', id);
+        renderChooserNote();
+    });
+    renderChooserNote();
 }
 
 // ── Board rendering ──────────────────────────────────────────────────────────
@@ -526,22 +545,72 @@ function winBoard() {
         State.solved++;
         el('solvedCount').textContent = State.solved;
         el('winEmoji').textContent = State.walkerEmoji;
-        el('winLine').textContent = `${State.walkerEmoji} reached the 💎 in ${route.length} tiles.`;
+        renderWinCopy(route.length);
         el('winModal').hidden = false;
         State.busy = false;
     }, route.length * stepMs + 500);
 }
 
-function newBoard(advance) {
-    if (advance) State.boardNum++;
+function renderWinCopy(routeLen) {
+    const lastStage = State.mode === 'adventure' && State.stage === SIZES.length - 1;
+    State.adventureDone = lastStage;
+
+    if (lastStage) {
+        el('winTitle').textContent = 'Adventure complete! 🏆';
+        el('winLine').textContent =
+            `${State.walkerEmoji} solved all ${SIZES.length} boards, 5×5 through 10×10.`;
+        el('nextBoardBtn').textContent = 'Play Again →';
+    } else if (State.mode === 'adventure') {
+        const next = SIZES[State.stage + 1];
+        el('winTitle').textContent = 'Stage clear!';
+        el('winLine').textContent =
+            `${State.walkerEmoji} reached the 💎 in ${routeLen} tiles. Next up: ${next.sub}.`;
+        el('nextBoardBtn').textContent = 'Next Stage →';
+    } else {
+        el('winTitle').textContent = 'You made it!';
+        el('winLine').textContent = `${State.walkerEmoji} reached the 💎 in ${routeLen} tiles.`;
+        el('nextBoardBtn').textContent = 'Next Board →';
+    }
+}
+
+function renderProgress() {
+    if (State.mode === 'adventure') {
+        el('progressLabel').textContent = 'Stage';
+        el('boardNum').textContent = `${State.stage + 1}/${SIZES.length}`;
+    } else {
+        el('progressLabel').textContent = 'Board';
+        el('boardNum').textContent = String(State.boardNum);
+    }
+    el('boardSize').textContent = `${State.size}×${State.size}`;
+}
+
+// countUp: this is another board in the session (the New Board button, or the
+// next one after a win). advanceStage: only ever set after clearing a board in
+// adventure mode, so re-rolling never skips a rung of the ladder.
+function newBoard({ countUp = true, advanceStage = false } = {}) {
+    if (countUp) State.boardNum++;
+    if (advanceStage && State.mode === 'adventure' && State.stage < SIZES.length - 1) {
+        State.stage++;
+        State.size = SIZES[State.stage].n;
+    }
     State.board = makeBoard(State.size);
     State.walkerEmoji = pickOne(WALKERS);
     State.turnsLeft = TURNS_PER_GATE;
-    el('boardNum').textContent = State.boardNum;
+    renderProgress();
     renderBoard();
     renderPips();
     refreshReach();
     setHint('Tap a tile to spin it. Connect your walker to the 💎.');
+}
+
+function startAdventureOver() {
+    State.stage = 0;
+    State.size = SIZES[0].n;
+    State.boardNum = 1;
+    State.solved = 0;
+    State.adventureDone = false;
+    el('solvedCount').textContent = '0';
+    newBoard({ countUp: false });
 }
 
 // ── Math gate ────────────────────────────────────────────────────────────────
@@ -618,10 +687,14 @@ function submitAnswer() {
 function startGame() {
     el('setup').hidden = true;
     el('game').hidden = false;
+    State.mode = State.boardChoice === 'adventure' ? 'adventure' : 'free';
+    State.stage = 0;
+    State.size = State.mode === 'adventure' ? SIZES[0].n : Number(State.boardChoice);
+    State.adventureDone = false;
     State.solved = 0;
     State.boardNum = 1;
     el('solvedCount').textContent = '0';
-    newBoard(false);
+    newBoard({ countUp: false });
 }
 
 function showSetup() {
@@ -640,11 +713,12 @@ function init() {
     syncMuteBtn();
 
     el('startBtn').addEventListener('click', startGame);
-    el('newBoardBtn').addEventListener('click', () => { if (!State.busy) newBoard(true); });
+    el('newBoardBtn').addEventListener('click', () => { if (!State.busy) newBoard({}); });
     el('changeBtn').addEventListener('click', showSetup);
     el('nextBoardBtn').addEventListener('click', () => {
         el('winModal').hidden = true;
-        newBoard(true);
+        if (State.adventureDone) startAdventureOver();
+        else newBoard({ advanceStage: State.mode === 'adventure' });
     });
     el('muteBtn').addEventListener('click', () => {
         Sound.muted = !Sound.muted;

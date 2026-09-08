@@ -17,11 +17,12 @@
         <!-- ── Setup screen ─────────────────────────────────────────────── -->
         <div class="setup" id="setup">
             <div class="setup-card">
-                <h2>Pick your board</h2>
-                <div class="chooser" id="sizeChooser"></div>
-
                 <h2>Pick your math</h2>
                 <div class="chooser" id="gradeChooser"></div>
+
+                <h2>Pick your board</h2>
+                <div class="chooser" id="sizeChooser"></div>
+                <p class="chooser-note" id="chooserNote"></p>
 
                 <button class="btn-primary btn-start" id="startBtn">Start Playing!</button>
             </div>
@@ -31,8 +32,9 @@
         <div class="game" id="game" hidden>
             <div class="hud">
                 <div class="hud-item">
-                    <span class="hud-label">Board</span>
+                    <span class="hud-label" id="progressLabel">Stage</span>
                     <span class="hud-value" id="boardNum">1</span>
+                    <span class="hud-size" id="boardSize">5×5</span>
                 </div>
                 <div class="hud-item hud-moves">
                     <span class="hud-label">Turns left</span>
@@ -76,7 +78,7 @@
     <div class="modal" id="winModal" hidden>
         <div class="modal-card win-card">
             <div class="win-emoji" id="winEmoji">🎉</div>
-            <h2>You made it!</h2>
+            <h2 id="winTitle">You made it!</h2>
             <p class="win-line" id="winLine"></p>
             <button class="btn-primary" id="nextBoardBtn">Next Board →</button>
         </div>

@@ -149,6 +149,24 @@ header h1 {
 .choice-label { font-size: 1.05em; color: var(--ink); }
 .choice-sub { font-size: 0.72em; color: var(--muted); }
 
+.choice-adventure {
+    background: linear-gradient(135deg, #fff6e0 0%, #ffeec4 100%);
+    border-color: #f0cf86;
+}
+.choice-adventure:hover { border-color: var(--gold); }
+.choice-adventure.selected {
+    border-color: var(--gold);
+    background: #fff1d2;
+    box-shadow: 0 0 0 3px rgba(246, 185, 59, 0.25);
+}
+
+.chooser-note {
+    margin-top: 10px;
+    font-size: 0.8em;
+    color: var(--muted);
+    min-height: 1.3em;
+}
+
 .btn-start { margin-top: 26px; }
 
 /* ── HUD ────────────────────────────────────────────────────────────────── */
@@ -169,6 +187,15 @@ header h1 {
 .hud-item { display: flex; align-items: center; gap: 7px; }
 .hud-label { font-size: 0.76em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .hud-value { font-size: 1.15em; color: var(--accent); }
+
+.hud-size {
+    font-size: 0.74em;
+    color: var(--muted);
+    background: white;
+    border: 2px solid var(--tile-edge);
+    border-radius: 999px;
+    padding: 1px 8px;
+}
 
 .pips { display: flex; gap: 5px; }
 .pip {
