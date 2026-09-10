@@ -235,6 +235,7 @@ const state = {
     mathCurrent: null,
     bestMiles: 0,
     shipSkin: 0,        // index into SHIP_SKINS — cosmetic only
+    planetStyle: 'iso', // 'iso' (Explore) | 'side' (Classic) — see planet.js
     cheated: false,     // true if warp easter egg used — disqualifies high score
     warpEffect: 0,      // countdown (seconds) for the warp flash animation
 
@@ -531,7 +532,7 @@ function clearStuckAsteroid() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Asteroid explosion — the reward for a correct answer. Same shape as the
-// surface stage's knocked-loose debris (spawnDebris/drawDebris in planet.js),
+// surface stage's knocked-loose debris (drawDebrisAt in planet.js),
 // minus gravity: shards fly straight out and fade.
 // ─────────────────────────────────────────────────────────────────────────────
 const SHARD_LIFE = 0.9;
@@ -1101,6 +1102,14 @@ document.querySelectorAll('.ship-btn').forEach(btn => {
         document.querySelectorAll('.ship-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         state.shipSkin = Number(btn.dataset.skin);
+    });
+});
+
+document.querySelectorAll('.planet-style-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.planet-style-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.planetStyle = btn.dataset.style;
     });
 });
 

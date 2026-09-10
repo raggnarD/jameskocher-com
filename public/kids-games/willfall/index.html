@@ -21,7 +21,7 @@
                 <div class="control-hints">
                     <div><strong>In the belt:</strong> <span class="key">↑</span> <span class="key">↓</span> or <span class="key">W</span> <span class="key">S</span> to steer</div>
                     <div>Hold <span class="key">→</span> or <span class="key">D</span> to thrust forward (uses gas)</div>
-                    <div><strong>On a planet:</strong> <span class="key">←</span> <span class="key">→</span> to move, <span class="key">Space</span> to jump</div>
+                    <div><strong>On a planet:</strong> arrows or <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> to walk, <span class="key">Space</span> to jump</div>
                     <div>Collect 10 of every resource, then build your base and blast off</div>
                 </div>
 
@@ -56,6 +56,14 @@
                             <canvas class="ship-preview" width="88" height="56"></canvas>
                             <span>Saucer</span>
                         </button>
+                    </div>
+                </div>
+
+                <div class="grade-picker">
+                    <label>Pick your planet style:</label>
+                    <div class="grade-buttons">
+                        <button class="planet-style-btn selected" data-style="iso">🧊 Explore</button>
+                        <button class="planet-style-btn" data-style="side">➡️ Classic</button>
                     </div>
                 </div>
 
@@ -134,6 +142,9 @@
             </div>
             <div class="footer-hint hidden" id="planetHint">
                 ⬅️➡️ Move • ␣ Space to jump • 👾 Dodge aliens • ⛏️ Collect 10 of each resource • 🏗️ Then build your base
+            </div>
+            <div class="footer-hint hidden" id="planetHintIso">
+                ⬆️⬇️⬅️➡️ Walk • ␣ Space to jump up ledges • 👾 Aliens chase you — walkers can't climb! • ⛏️ Collect 10 of each resource • 🏗️ Then follow the arrow to your build site
             </div>
         </div>
 
@@ -231,6 +242,8 @@
     <script src="backdrop.js"></script>
     <script src="game.js"></script>
     <script src="planet.js"></script>
+    <script src="planet-side.js"></script>
+    <script src="planet-iso.js"></script>
     <script src="shop.js"></script>
 </body>
 </html>

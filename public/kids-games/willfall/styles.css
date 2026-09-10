@@ -223,7 +223,7 @@ header h1 .title-gradient {
     flex-wrap: wrap;
 }
 
-.grade-btn {
+.grade-btn, .planet-style-btn {
     background: rgba(255,255,255,0.08);
     color: #e0e0ff;
     border: 2px solid rgba(255,255,255,0.15);
@@ -235,9 +235,9 @@ header h1 .title-gradient {
     min-width: 56px;
 }
 
-.grade-btn:hover { background: rgba(255,255,255,0.15); }
+.grade-btn:hover, .planet-style-btn:hover { background: rgba(255,255,255,0.15); }
 
-.grade-btn.selected {
+.grade-btn.selected, .planet-style-btn.selected {
     background: linear-gradient(135deg, #7aa8ff 0%, #c896ff 100%);
     border-color: transparent;
     color: #0a0a2a;

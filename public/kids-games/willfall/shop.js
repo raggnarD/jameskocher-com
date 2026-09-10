@@ -607,7 +607,7 @@ const SHOP_CATALOG = {
             { id: 'deflector',   name: 'Nose Deflector',      emoji: '🛰️', max: 2, desc: '15% smaller hit box in the belt' }
         ] },
         { label: 'Surface Gear', emoji: '⛏️', items: [
-            { id: 'gravBoots', name: 'Grav Boots',      emoji: '🥾', max: 2, desc: 'Jump 15% higher on planets' },
+            { id: 'gravBoots', name: 'Grav Boots',      emoji: '🥾', max: 2, desc: 'Jump 15% higher on planets — high enough to climb tall rock mesas' },
             { id: 'magnet',    name: 'Magnet Glove',    emoji: '🧲', max: 2, desc: '50% longer reach for resources' },
             { id: 'cargoNet',  name: 'Cargo Netting',   emoji: '🎒', max: 1, desc: 'Alien hits cost 1 resource, not 3' },
             { id: 'refinery',  name: 'Refinery Module', emoji: '⚗️', max: 2, desc: '+100 bonus miles per resource' }
