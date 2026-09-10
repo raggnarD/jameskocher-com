@@ -176,7 +176,7 @@ header h1 {
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 10px 20px;
+    gap: 8px 16px;
     padding: 10px 14px;
     background: #f7f8fd;
     border: 2px solid var(--tile-edge);
@@ -207,7 +207,20 @@ header h1 {
 }
 .pip.on { background: var(--gold); transform: scale(1.1); box-shadow: 0 0 6px rgba(246, 185, 59, 0.7); }
 
-.hud-buttons { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+/* The four readouts fill the top row on their own, so the solved counter and
+   the buttons share a second row beneath a divider. */
+.hud-footer {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 2px solid var(--tile-edge);
+}
+
+.hud-buttons { display: flex; gap: 6px; align-items: center; }
 
 /* ── Board ──────────────────────────────────────────────────────────────── */
 
@@ -442,8 +455,7 @@ header h1 {
     .game-container { padding: 14px; border-radius: 12px; }
     header h1 { font-size: 1.5em; }
     .board-wrap { width: min(100%, 62vh); }
-    .hud { gap: 8px 14px; padding: 8px 10px; }
-    .hud-buttons { margin-left: 0; width: 100%; justify-content: center; }
+    .hud { gap: 8px 12px; padding: 8px 10px; }
     .badge { font-size: clamp(12px, calc(38vh / var(--n, 5)), 28px); }
     .walker { font-size: clamp(14px, calc(44vh / var(--n, 5)), 32px); }
     .problem { font-size: 1.5em; }

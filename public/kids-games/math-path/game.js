@@ -298,18 +298,21 @@ const SIZES = [
 ];
 
 const GRADES = [
-    { id: 'K', label: 'K', sub: 'Counting' },
-    { id: '1', label: '1st', sub: '+ and −' },
-    { id: '2', label: '2nd', sub: 'To 100' },
-    { id: '3', label: '3rd', sub: '× and ÷' },
-    { id: '4', label: '4th', sub: 'Bigger' },
-    { id: '5', label: '5th', sub: 'Fractions' }
+    { id: 'K', label: 'K', sub: 'Counting', long: 'Kindergarten' },
+    { id: '1', label: '1st', sub: '+ and −', long: '1st Grade' },
+    { id: '2', label: '2nd', sub: 'To 100', long: '2nd Grade' },
+    { id: '3', label: '3rd', sub: '× and ÷', long: '3rd Grade' },
+    { id: '4', label: '4th', sub: 'Bigger', long: '4th Grade' },
+    { id: '5', label: '5th', sub: 'Fractions', long: '5th Grade' }
 ];
+
+// Adventure plays this many boards at each difficulty before moving up.
+const BOARDS_PER_STAGE = 5;
 
 // The board row on the setup screen: Adventure first (the default), then each
 // fixed size on its own. Adventure walks SIZES in order, one board per rung.
 const BOARD_CHOICES = [
-    { id: 'adventure', label: '⭐ Adventure', sub: '5×5 → 10×10', cls: 'choice-adventure' },
+    { id: 'adventure', label: '⭐ Adventure', sub: 'Very Easy → Very Hard', cls: 'choice-adventure' },
     ...SIZES.map(s => ({ id: String(s.n), label: s.label, sub: s.sub }))
 ];
 
@@ -354,6 +357,7 @@ const State = {
     grade: localStorage.getItem('mathpath.grade') || 'K',
     mode: 'adventure',           // 'adventure' | 'free'
     stage: 0,                    // index into SIZES, adventure only
+    stageBoard: 1,               // 1..BOARDS_PER_STAGE within the current difficulty
     size: SIZES[0].n,
     adventureDone: false,
     board: null,
@@ -386,7 +390,7 @@ function buildChooser(host, items, valueOf, isSelected, onPick) {
 
 function renderChooserNote() {
     el('chooserNote').textContent = State.boardChoice === 'adventure'
-        ? 'Work up the ladder: 5×5, 6×6, 7×7, 8×8, then 10×10.'
+        ? `${BOARDS_PER_STAGE} boards at each difficulty, from Very Easy (5×5) up to Very Hard (10×10).`
         : 'One size, board after board, for as long as you like.';
 }
 
@@ -551,37 +555,52 @@ function winBoard() {
     }, route.length * stepMs + 500);
 }
 
+// Called at the moment of a win, before anything advances — so State.stage and
+// State.stageBoard still describe the board that was just cleared.
 function renderWinCopy(routeLen) {
-    const lastStage = State.mode === 'adventure' && State.stage === SIZES.length - 1;
-    State.adventureDone = lastStage;
+    const lastRung = State.stage === SIZES.length - 1;
+    const rungCleared = State.stageBoard >= BOARDS_PER_STAGE;
+    const reached = `${State.walkerEmoji} reached the 💎 in ${routeLen} tiles.`;
 
-    if (lastStage) {
+    State.adventureDone = State.mode === 'adventure' && lastRung && rungCleared;
+
+    if (State.adventureDone) {
         el('winTitle').textContent = 'Adventure complete! 🏆';
         el('winLine').textContent =
-            `${State.walkerEmoji} solved all ${SIZES.length} boards, 5×5 through 10×10.`;
+            `${State.walkerEmoji} solved all ${SIZES.length * BOARDS_PER_STAGE} boards, ` +
+            `Very Easy through Very Hard.`;
         el('nextBoardBtn').textContent = 'Play Again →';
-    } else if (State.mode === 'adventure') {
+    } else if (State.mode === 'adventure' && rungCleared) {
         const next = SIZES[State.stage + 1];
-        el('winTitle').textContent = 'Stage clear!';
+        el('winTitle').textContent = `${SIZES[State.stage].label} complete! ⭐`;
+        el('winLine').textContent = `${reached} Next up: ${next.label} (${next.sub}).`;
+        el('nextBoardBtn').textContent = 'Next Difficulty →';
+    } else if (State.mode === 'adventure') {
+        el('winTitle').textContent = 'Level clear!';
         el('winLine').textContent =
-            `${State.walkerEmoji} reached the 💎 in ${routeLen} tiles. Next up: ${next.sub}.`;
-        el('nextBoardBtn').textContent = 'Next Stage →';
+            `${reached} Level ${State.stageBoard + 1} of ${BOARDS_PER_STAGE} on ` +
+            `${SIZES[State.stage].label} next.`;
+        el('nextBoardBtn').textContent = 'Next Level →';
     } else {
         el('winTitle').textContent = 'You made it!';
-        el('winLine').textContent = `${State.walkerEmoji} reached the 💎 in ${routeLen} tiles.`;
+        el('winLine').textContent = reached;
         el('nextBoardBtn').textContent = 'Next Board →';
     }
 }
 
 function renderProgress() {
-    if (State.mode === 'adventure') {
-        el('progressLabel').textContent = 'Stage';
-        el('boardNum').textContent = `${State.stage + 1}/${SIZES.length}`;
+    const adventure = State.mode === 'adventure';
+    if (adventure) {
+        el('progressLabel').textContent = 'Difficulty';
+        el('boardNum').textContent = SIZES[State.stage].label;
+        el('levelNum').textContent = `${State.stageBoard}/${BOARDS_PER_STAGE}`;
     } else {
         el('progressLabel').textContent = 'Board';
         el('boardNum').textContent = String(State.boardNum);
     }
+    el('levelItem').hidden = !adventure;
     el('boardSize').textContent = `${State.size}×${State.size}`;
+    el('mathGrade').textContent = (GRADES.find(g => g.id === State.grade) || GRADES[0]).long;
 }
 
 // countUp: this is another board in the session (the New Board button, or the
@@ -589,9 +608,14 @@ function renderProgress() {
 // adventure mode, so re-rolling never skips a rung of the ladder.
 function newBoard({ countUp = true, advanceStage = false } = {}) {
     if (countUp) State.boardNum++;
-    if (advanceStage && State.mode === 'adventure' && State.stage < SIZES.length - 1) {
-        State.stage++;
-        State.size = SIZES[State.stage].n;
+    if (advanceStage && State.mode === 'adventure') {
+        if (State.stageBoard < BOARDS_PER_STAGE) {
+            State.stageBoard++;
+        } else if (State.stage < SIZES.length - 1) {
+            State.stage++;
+            State.stageBoard = 1;
+            State.size = SIZES[State.stage].n;
+        }
     }
     State.board = makeBoard(State.size);
     State.walkerEmoji = pickOne(WALKERS);
@@ -605,6 +629,7 @@ function newBoard({ countUp = true, advanceStage = false } = {}) {
 
 function startAdventureOver() {
     State.stage = 0;
+    State.stageBoard = 1;
     State.size = SIZES[0].n;
     State.boardNum = 1;
     State.solved = 0;
@@ -689,6 +714,7 @@ function startGame() {
     el('game').hidden = false;
     State.mode = State.boardChoice === 'adventure' ? 'adventure' : 'free';
     State.stage = 0;
+    State.stageBoard = 1;
     State.size = State.mode === 'adventure' ? SIZES[0].n : Number(State.boardChoice);
     State.adventureDone = false;
     State.solved = 0;

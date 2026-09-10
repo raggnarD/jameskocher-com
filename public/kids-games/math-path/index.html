@@ -32,22 +32,32 @@
         <div class="game" id="game" hidden>
             <div class="hud">
                 <div class="hud-item">
-                    <span class="hud-label" id="progressLabel">Stage</span>
-                    <span class="hud-value" id="boardNum">1</span>
+                    <span class="hud-label" id="progressLabel">Difficulty</span>
+                    <span class="hud-value" id="boardNum">Very Easy</span>
                     <span class="hud-size" id="boardSize">5×5</span>
+                </div>
+                <div class="hud-item" id="levelItem">
+                    <span class="hud-label">Level</span>
+                    <span class="hud-value" id="levelNum">1/5</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Math</span>
+                    <span class="hud-size" id="mathGrade">Kindergarten</span>
                 </div>
                 <div class="hud-item hud-moves">
                     <span class="hud-label">Turns left</span>
                     <span class="pips" id="pips"></span>
                 </div>
-                <div class="hud-item">
-                    <span class="hud-label">Solved</span>
-                    <span class="hud-value" id="solvedCount">0</span>
-                </div>
-                <div class="hud-buttons">
-                    <button class="btn-icon" id="muteBtn" title="Sound on/off">🔊</button>
-                    <button class="btn-secondary" id="newBoardBtn">New Board</button>
-                    <button class="btn-secondary" id="changeBtn">Change Level</button>
+                <div class="hud-footer">
+                    <div class="hud-item">
+                        <span class="hud-label">Solved</span>
+                        <span class="hud-value" id="solvedCount">0</span>
+                    </div>
+                    <div class="hud-buttons">
+                        <button class="btn-icon" id="muteBtn" title="Sound on/off">🔊</button>
+                        <button class="btn-secondary" id="newBoardBtn">New Board</button>
+                        <button class="btn-secondary" id="changeBtn">Change Level</button>
+                    </div>
                 </div>
             </div>
 
