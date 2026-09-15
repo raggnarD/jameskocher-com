@@ -108,11 +108,13 @@ function isoGenerate(p) {
         },
         cam: { x: 0, y: 0 },
         camZ: 0,                   // ground level the camera frames — ignores jumps
-        bootHint: 0                // seconds the "need Grav Boots" tip stays up
+        bootHint: 0,               // seconds the "need Grav Boots" tip stays up
+        cave: null                 // the hidden treasure cave — see cave.js
     });
     const c = isoRaw(p.man.x, p.man.y, 0);
     p.cam.x = c.x;
     p.cam.y = c.y;
+    cavePlace(p);
 }
 
 // Every colour is sampled from Classic's ground gradient: tile tops at the tone
@@ -168,7 +170,7 @@ function isoChunk(p, cx, cy) {
     if (key === p.lastChunkKey) return p.lastChunk;
     let ch = p.chunks.get(key);
     if (!ch) {
-        ch = isoMakeChunk(p, cx, cy);
+        ch = p.solidChunk || isoMakeChunk(p, cx, cy);   // a cave maze is solid rock outside its own chunks
         p.chunks.set(key, ch);
     }
     p.lastChunkKey = key;
@@ -334,6 +336,7 @@ function isoFall(p, e, dt, r) {
 // ─────────────────────────────────────────────────────────────────────────────
 function isoUpdate(p, dt) {
     isoUpdateSpaceman(p, dt);
+    caveUpdateSurface(p);
     isoSpawnAliens(p, dt);
     isoUpdateItems(p, dt);
     isoUpdateAliens(p, dt);
@@ -349,7 +352,7 @@ function isoUpdateSpaceman(p, dt) {
     if (keyHeld('arrowright', 'd')) sx += 1;
     if (keyHeld('arrowup', 'w')) sy -= 1;
     if (keyHeld('arrowdown', 's')) sy += 1;
-    const jump = keyHeld(' ', 'spacebar');
+    const jump = !p.noJump && keyHeld(' ', 'spacebar');   // no hopping over cave traps
 
     // Keys are SCREEN directions (↑ walks up the screen). Screen-right is
     // world +x −y, screen-down is +x +y.
@@ -563,7 +566,7 @@ function isoPlacePad(p) {
         for (const off of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05]) {
             const tx = Math.floor(m.x + Math.cos(heading + off) * dist);
             const ty = Math.floor(m.y + Math.sin(heading + off) * dist);
-            if (isoMesaNear(p, tx, ty)) continue;
+            if (isoMesaNear(p, tx, ty) || caveNear(p, tx, ty)) continue;
             const L = isoLevelAt(p, tx, ty);
             if (fallback === null) fallback = { tx, ty, level: L };
             if ((best === null || L < best.level) && isoFlat3(p, tx, ty, L)) best = { tx, ty, level: L };
@@ -710,13 +713,14 @@ function isoDraw(p) {
                 }
             }
 
+            if (p.tileDecor) p.tileDecor(p, tx, ty, L, cx, cy);   // cave mouth, trap plates
             if (prop) isoDrawProp(pal, prop, cx, cy + hh, tx, ty, p.seed);
         }
         while (si < sprites.length && sprites[si].row <= d) sprites[si++].draw();
     }
     while (si < sprites.length) sprites[si++].draw();
 
-    isoDrawHaze(p);
+    if (!p.dark) isoDrawHaze(p);
     if (p.pad && !p.baseBuilt) isoDrawPadArrow(p);
     if (p.bootHint > 0 && !p.man.hidden) isoDrawBootHint(p);
 }
@@ -853,6 +857,8 @@ function isoCollectSprites(p) {
             drawSpacemanAt(p, s.x, s.y - (MAN_H / 2 - 2));   // boots on the ground point
         });
     }
+
+    if (p.extraSprites) p.extraSprites(p, add, onScreen);   // cave rubble, treasure chest
 
     list.sort((a, b) => a.row - b.row || a.depth - b.depth);
     return list;

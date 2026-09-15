@@ -246,6 +246,7 @@ const state = {
     planet: null,       // platformer world while on the surface
     transition: null,   // { kind, t, dur } while descending / ascending
     tierBanner: 0,      // countdown for the "entering X belt" banner
+    chests: [],         // tier indexes of cave treasure found this run — see cave.js
 
     // Trading Post — run-scoped, reset by startGame(). See shop.js.
     shop: { tokens: 0, owned: {}, equipped: {}, upgrades: {} }
@@ -825,7 +826,7 @@ function drawCheatBadge() {
     ctx.font = '12px -apple-system, system-ui, sans-serif';
     ctx.fillStyle = 'rgba(200,150,255,0.65)';
     ctx.textAlign = 'right';
-    ctx.fillText('⚡ warp used — score excluded', CANVAS_W - 12, 44);
+    ctx.fillText('⚡ cheat used — score excluded', CANVAS_W - 12, 44);
     ctx.textAlign = 'left';
     ctx.restore();
 }
@@ -977,6 +978,7 @@ async function startGame() {
     state.phase = 'belt';
     state.beltIndex = 0;
     state.bonusMiles = 0;
+    state.chests = [];
     state.planet = null;
     state.transition = null;
     state.tierBanner = 0;

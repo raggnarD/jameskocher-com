@@ -142,6 +142,11 @@ function updatePlanet(dt) {
 
     if (p.banner > 0) p.banner = Math.max(0, p.banner - dt);
 
+    // Hidden cave (cave.js): the fade holds everything still, and while the
+    // maze is up the surface waits, frozen, underneath it.
+    if (p.caveFade) { caveTickFade(p, dt); updatePlanetHUD(); return; }
+    if (p.maze) { caveUpdate(p, dt); updatePlanetHUD(); return; }
+
     // Base assembly animation, then launch. The world holds still so the base
     // and the spaceman stay put under the camera while it goes up.
     if (p.building > 0) {
@@ -228,6 +233,7 @@ function startDescent() {
 function startAscent() {
     const p = state.planet;
     if (p) {
+        if (p.maze || p.caveFade) caveForceExit(p);   // TURBO from inside a cave
         p.man.hidden = true;          // he's aboard now
         p.rocketLanded = false;       // the launch draws its own rocket
         surfaceStyle(p).prepareLaunch(p);
@@ -297,6 +303,10 @@ function updatePlanetHUD() {
     document.getElementById('planetBonusDisplay').textContent =
         `+${Math.floor(state.bonusMiles).toLocaleString()} mi`;
     document.getElementById('planetTokenDisplay').textContent = `🪙 ${state.shop.tokens}`;
+    // In a cave the resource chips make way for the Exit button
+    const inCave = !!p.maze;
+    document.getElementById('resourcesHudItem').classList.toggle('hidden', inCave);
+    document.getElementById('caveHudItem').classList.toggle('hidden', !inCave);
 
     const sig = p.types.map(t => p.collected[t]).join(',') + '|' + p.tierIndex;
     if (sig === lastChipSig) return;
@@ -320,9 +330,14 @@ function drawPlanetScene() {
     const p = state.planet;
     if (!p) return;
     ctx.globalAlpha = sceneAlpha;
-    drawPlanetSky(p);
-    surfaceStyle(p).draw(p);
-    drawPlanetBanner(p);
+    if (p.maze) {
+        caveDraw(p);
+    } else {
+        drawPlanetSky(p);
+        surfaceStyle(p).draw(p);
+        drawPlanetBanner(p);
+    }
+    if (p.caveFade) caveDrawFade(p);
     ctx.globalAlpha = 1;
 }
 

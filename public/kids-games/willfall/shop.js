@@ -657,6 +657,8 @@ function resetShop() {
     shopTab = 'interior';
     shopDone = null;
     draft = null;
+    shopAnimStop();
+    hideChestPopup();
 }
 
 // Equipped paint merged over the ship's own colors, for whichever shop state is
@@ -700,6 +702,7 @@ function openShop(afterStage, onDone) {
     updateHUD();
     renderShop();
     document.getElementById('shopScreen').classList.remove('hidden');
+    shopAnimStart();
 }
 
 // Nothing is charged until here. Capacity upgrades top the player up on commit,
@@ -724,6 +727,8 @@ function commitDraft() {
 }
 
 function closeShop() {
+    shopAnimStop();
+    hideChestPopup();
     commitDraft();
     document.getElementById('shopScreen').classList.add('hidden');
     state.paused = false;
@@ -856,6 +861,10 @@ function renderShop() {
     document.getElementById('shopSubtitle').textContent =
         `${tier.emoji} ${tier.name} ${what} cleared — here's your token.`;
     document.getElementById('shopTokens').textContent = `🪙 ${draft.tokens}`;
+    const chip = document.getElementById('shopChests');
+    chip.classList.toggle('hidden', state.chests.length === 0);
+    chip.textContent = `🧰 ${state.chests.length}`;
+    chip.title = state.chests.length ? `Treasure from: ${chestLevels()}` : '';
 
     document.querySelectorAll('.shop-tab').forEach(t =>
         t.classList.toggle('active', t.dataset.tab === shopTab));
@@ -953,10 +962,235 @@ function drawInteriorPreview(c, W, H) {
         if (item && item.draw) item.draw(c, a);
         else drawEmptySlot(c, anchor);
     }
+    drawChestsInPreview(c);
 
     c.restore();
     rr(c, x0, y0, x1 - x0, y1 - y0, 30);
     c.strokeStyle = pal.stroke; c.lineWidth = 3; c.stroke();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Treasure chests — found in the hidden caves on Explore planets (cave.js).
+// They bob in the cabin's upper corners, right side first, then left, and
+// clicking one opens it. Every position is fixed; only the bob and the popup's
+// shine move, and those run on their own loop while the shop is open.
+// ─────────────────────────────────────────────────────────────────────────────
+const CHEST_SLOTS = [
+    [354, 58], [384, 58], [410, 62],     // upper right, clear of the porthole
+    [354, 90], [384, 90], [412, 92],     // …and above the arcade cabinet
+    [62, 60], [90, 56], [116, 60],       // upper left, above the wall decor
+    [76, 90]                             // over the bunk
+];
+const CHEST_HIT = 16;                    // px either side of a slot that counts as a click
+
+function chestLevels() {
+    return state.chests.map(i => `${TIERS[i].emoji} ${TIERS[i].name}`).join(', ');
+}
+
+function drawGem(c, x, y, r, color, shine) {
+    c.fillStyle = color;
+    c.strokeStyle = 'rgba(0,0,0,0.45)';
+    c.lineWidth = Math.max(1, r * 0.15);
+    c.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+        const rad = r * (i % 2 ? 0.8 : 1);
+        if (i === 0) c.moveTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
+        else c.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
+    }
+    c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = shine;
+    c.beginPath();
+    c.moveTo(x - r * 0.45, y - r * 0.2); c.lineTo(x, y - r * 0.75); c.lineTo(x + r * 0.1, y - r * 0.1);
+    c.closePath(); c.fill();
+}
+
+// A small closed chest centred on (x, y), with the planet's gem on the lock
+function drawTreasureChest(c, x, y, tierIdx) {
+    const tier = TIERS[tierIdx];
+    const halo = c.createRadialGradient(x, y, 2, x, y, 20);
+    halo.addColorStop(0, tier.glow + '70');
+    halo.addColorStop(1, tier.glow + '00');
+    c.fillStyle = halo;
+    c.beginPath(); c.arc(x, y, 20, 0, Math.PI * 2); c.fill();
+
+    c.fillStyle = '#b45309'; c.strokeStyle = '#451a03'; c.lineWidth = 1.5;
+    c.beginPath();                                                          // domed lid
+    c.moveTo(x - 12, y - 2); c.lineTo(x - 12, y - 5);
+    c.quadraticCurveTo(x, y - 15, x + 12, y - 5);
+    c.lineTo(x + 12, y - 2);
+    c.closePath(); c.fill(); c.stroke();
+    fillRR(c, x - 12, y - 2, 24, 12, 2, '#92400e', '#451a03', 1.5);        // body
+    c.fillStyle = '#fbbf24';                                                // gold bands
+    c.fillRect(x - 9, y - 7, 3, 17);
+    c.fillRect(x + 6, y - 7, 3, 17);
+    c.fillRect(x - 12, y - 3, 24, 2.5);
+    fillRR(c, x - 3.5, y - 1, 7, 7, 1.5, '#fde68a', '#b45309', 1);          // lock
+    drawGem(c, x, y + 2.5, 2.4, tier.color, tier.glow);
+}
+
+function drawChestsInPreview(c) {
+    const now = performance.now();
+    const n = Math.min(state.chests.length, CHEST_SLOTS.length);
+    for (let i = 0; i < n; i++) {
+        const [x, y] = CHEST_SLOTS[i];
+        drawTreasureChest(c, x, y + Math.sin(now / 600 + i * 1.3) * 3, state.chests[i]);
+    }
+}
+
+// The popup's big open chest, overflowing with gold and the planet's gems
+function drawOpenChest(c, W, H, tierIdx, now) {
+    const tier = TIERS[tierIdx];
+    const cx = W / 2, rim = 168;                 // rim = top edge of the chest body
+    c.fillStyle = '#05050f';
+    c.fillRect(0, 0, W, H);
+    previewStars(c, W, H);
+
+    // Slow rays and a glow in the planet's colour
+    c.save();
+    c.translate(cx, rim - 30);
+    c.rotate(now / 5000);
+    c.fillStyle = tier.glow + '1c';
+    for (let i = 0; i < 12; i++) {
+        c.rotate(Math.PI / 6);
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(-16, -220); c.lineTo(16, -220); c.closePath(); c.fill();
+    }
+    c.restore();
+    const glow = c.createRadialGradient(cx, rim - 30, 10, cx, rim - 30, 160);
+    glow.addColorStop(0, tier.glow + '80');
+    glow.addColorStop(0.5, 'rgba(255,215,0,0.14)');
+    glow.addColorStop(1, 'rgba(255,215,0,0)');
+    c.fillStyle = glow;
+    c.fillRect(0, 0, W, H);
+
+    c.fillStyle = 'rgba(0,0,0,0.45)';
+    c.beginPath(); c.ellipse(cx, rim + 68, 130, 14, 0, 0, Math.PI * 2); c.fill();
+
+    // Lid, tipped open behind
+    c.fillStyle = '#78350f'; c.strokeStyle = '#451a03'; c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(cx - 90, rim); c.lineTo(cx - 102, rim - 84); c.lineTo(cx + 102, rim - 84); c.lineTo(cx + 90, rim);
+    c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#fbbf24';
+    c.fillRect(cx - 104, rim - 90, 208, 9);
+    for (const bx of [-64, 56]) {
+        c.beginPath();
+        c.moveTo(cx + bx, rim); c.lineTo(cx + bx * 1.12, rim - 84);
+        c.lineTo(cx + bx * 1.12 + 8, rim - 84); c.lineTo(cx + bx + 8, rim);
+        c.closePath(); c.fill();
+    }
+
+    // A dome of coins, back rows first
+    const coin = (x, y) => {
+        c.fillStyle = '#fbbf24'; c.strokeStyle = '#b45309'; c.lineWidth = 1.5;
+        c.beginPath(); c.ellipse(x, y, 10, 5.5, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+        c.fillStyle = '#fde68a';
+        c.beginPath(); c.ellipse(x - 2, y - 1.5, 4.5, 2, 0, 0, Math.PI * 2); c.fill();
+    };
+    for (let row = 4; row >= 0; row--) {
+        const half = 86 - row * row * 4.5;
+        for (let x = -half + (row % 2 ? 9 : 0); x <= half; x += 18) {
+            coin(cx + x, rim - 4 - row * 11 + ((x * 7 + row * 13) % 5));
+        }
+    }
+    const gems = [[-52, -20, 11], [-14, -38, 13], [26, -22, 12], [60, -12, 10],
+                  [4, -54, 11], [-38, -44, 9], [44, -38, 10], [-72, -8, 8]];
+    gems.forEach(([gx, gy, r], i) => {
+        const alt = i % 3 === 2;
+        drawGem(c, cx + gx, rim + gy, r, alt ? tier.glow : tier.color, alt ? '#ffffff' : tier.glow);
+    });
+
+    // Chest front, over the heap
+    fillRR(c, cx - 90, rim, 180, 66, 8, '#92400e', '#451a03', 3);
+    c.strokeStyle = '#78350f'; c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(cx - 88, rim + 24); c.lineTo(cx + 88, rim + 24);
+    c.moveTo(cx - 88, rim + 46); c.lineTo(cx + 88, rim + 46);
+    c.stroke();
+    c.fillStyle = '#fbbf24';
+    c.fillRect(cx - 64, rim, 8, 66);
+    c.fillRect(cx + 56, rim, 8, 66);
+    fillRR(c, cx - 94, rim - 5, 188, 10, 3, '#fbbf24', '#b45309', 2);
+    fillRR(c, cx - 15, rim + 12, 30, 32, 5, '#fde68a', '#b45309', 2);
+    c.fillStyle = '#451a03';
+    c.beginPath(); c.arc(cx, rim + 32, 4, 0, Math.PI * 2); c.fill();
+    c.fillRect(cx - 2, rim + 32, 4, 8);
+    drawGem(c, cx, rim + 21, 5, tier.color, tier.glow);
+
+    // Spilled over the rim and onto the floor
+    coin(cx - 70, rim + 3);
+    coin(cx + 34, rim + 2);
+    for (const [x, y] of [[-118, 62], [-100, 70], [112, 66], [132, 58], [96, 74]]) coin(cx + x, rim + y);
+    drawGem(c, cx - 134, rim + 66, 7, tier.color, tier.glow);
+    drawGem(c, cx + 122, rim + 74, 6, tier.color, tier.glow);
+
+    // Twinkles
+    [[-60, -70], [70, -60], [-20, -96], [100, -20], [-110, -30], [30, -80]].forEach(([sx, sy], k) => {
+        const a = 0.5 + 0.5 * Math.sin(now / 280 + k * 1.7);
+        const r = 3 + 4 * a, x = cx + sx, y = rim + sy;
+        c.save();
+        c.globalAlpha = a;
+        c.fillStyle = '#ffffff';
+        c.beginPath();
+        c.moveTo(x, y - r);
+        c.quadraticCurveTo(x, y, x + r, y);
+        c.quadraticCurveTo(x, y, x, y + r);
+        c.quadraticCurveTo(x, y, x - r, y);
+        c.quadraticCurveTo(x, y, x, y - r);
+        c.fill();
+        c.restore();
+    });
+}
+
+// Which floating chest (index into state.chests) a mouse event is over, or -1
+function chestAt(e) {
+    if (shopTab !== 'interior') return -1;
+    const cv = document.getElementById('shopPreview');
+    const r = cv.getBoundingClientRect();
+    const x = (e.clientX - r.left) * cv.width / r.width;
+    const y = (e.clientY - r.top) * cv.height / r.height;
+    const n = Math.min(state.chests.length, CHEST_SLOTS.length);
+    for (let i = 0; i < n; i++) {
+        if (Math.abs(x - CHEST_SLOTS[i][0]) < CHEST_HIT && Math.abs(y - CHEST_SLOTS[i][1]) < CHEST_HIT) return i;
+    }
+    return -1;
+}
+
+function showChestPopup(tierIdx) {
+    const el = document.getElementById('chestPopup');
+    const t = TIERS[tierIdx];
+    el.dataset.tier = tierIdx;
+    document.getElementById('chestFound').textContent = `Found on: ${t.emoji} ${t.name} planet`;
+    el.classList.remove('hidden');
+    drawChestPopup();
+}
+
+function hideChestPopup() {
+    document.getElementById('chestPopup').classList.add('hidden');
+}
+
+function drawChestPopup() {
+    const el = document.getElementById('chestPopup');
+    if (el.classList.contains('hidden')) return;
+    const cv = document.getElementById('chestCanvas');
+    drawOpenChest(cv.getContext('2d'), cv.width, cv.height, Number(el.dataset.tier), performance.now());
+}
+
+// Only runs while the shop is open
+let shopAnimId = 0;
+function shopAnimStart() {
+    if (shopAnimId) return;
+    const tick = () => {
+        shopAnimId = requestAnimationFrame(tick);
+        if (shopTab === 'interior' && state.chests.length) drawShopPreview();
+        drawChestPopup();
+    };
+    shopAnimId = requestAnimationFrame(tick);
+}
+
+function shopAnimStop() {
+    if (shopAnimId) cancelAnimationFrame(shopAnimId);
+    shopAnimId = 0;
 }
 
 function drawEmptySlot(c, anchor) {
@@ -1016,10 +1250,12 @@ function renderShopSummary() {
     const sh = state.shop;
     const bought = Object.keys(sh.owned).length +
         Object.values(sh.upgrades).reduce((a, b) => a + b, 0);
-    if (bought === 0 && sh.tokens === 0) { el.classList.add('hidden'); return; }
+    const chests = state.chests.length;
+    if (bought === 0 && sh.tokens === 0 && chests === 0) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
     el.innerHTML = `🛠️ Bought <strong>${bought}</strong> ${bought === 1 ? 'thing' : 'things'} ` +
-        `for your ship &nbsp;·&nbsp; 🪙 <strong>${sh.tokens}</strong> unspent`;
+        `for your ship &nbsp;·&nbsp; 🪙 <strong>${sh.tokens}</strong> unspent` +
+        (chests ? ` &nbsp;·&nbsp; 🧰 <strong>${chests}</strong> treasure ${chests === 1 ? 'chest' : 'chests'}` : '');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1038,4 +1274,27 @@ document.getElementById('shopBody').addEventListener('click', (e) => {
     const btn = e.target.closest('.shop-item');
     if (!btn) return;
     shopClick(btn.dataset.id);
+});
+
+document.getElementById('shopChests').addEventListener('click', () => {
+    if (state.chests.length) shopToast(`🧰 Treasure from: ${chestLevels()}`);
+});
+
+document.getElementById('shopPreview').addEventListener('click', (e) => {
+    const i = chestAt(e);
+    if (i >= 0) showChestPopup(state.chests[i]);
+});
+
+document.getElementById('shopPreview').addEventListener('mousemove', (e) => {
+    e.currentTarget.style.cursor = chestAt(e) >= 0 ? 'pointer' : '';
+});
+
+document.getElementById('chestClose').addEventListener('click', hideChestPopup);
+
+document.getElementById('chestPopup').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) hideChestPopup();
+});
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.getElementById('chestPopup').classList.contains('hidden')) hideChestPopup();
 });
