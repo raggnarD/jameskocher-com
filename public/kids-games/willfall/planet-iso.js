@@ -721,6 +721,7 @@ function isoDraw(p) {
     while (si < sprites.length) sprites[si++].draw();
 
     if (!p.dark) isoDrawHaze(p);
+    if (p.rocketLanded && !p.man.hidden) isoDrawShipArrow(p);
     if (p.pad && !p.baseBuilt) isoDrawPadArrow(p);
     if (p.bootHint > 0 && !p.man.hidden) isoDrawBootHint(p);
 }
@@ -822,7 +823,10 @@ function isoCollectSprites(p) {
     if (p.rocketLanded) {
         const r = p.rocket;
         const s = isoProject(p, r.x, r.y, isoGround(p, r.x, r.y, 0));
-        if (onScreen(s, 140)) add(r.x, r.y, 0, () => drawRocketAt(s.x, s.y));
+        if (onScreen(s, 140)) add(r.x, r.y, 0, () => {
+            drawRocketAt(s.x, s.y);
+            isoDrawShipLabel(s.x, s.y);
+        });
     }
 
     for (const it of p.items) {
@@ -903,6 +907,37 @@ function isoAlpha(rgb, a) {
 // Pulsing arrow on the screen edge pointing at an off-screen build site
 function isoDrawPadArrow(p) {
     const s = isoProject(p, p.pad.x, p.pad.y, p.pad.level);
+    isoDrawEdgeArrow(s, '🏗️', '#4ade80', '#0a2a14');
+}
+
+// The same arrow in ship blue for the landed rocket, so a long walk out
+// collecting resources never loses track of where you parked
+function isoDrawShipArrow(p) {
+    const r = p.rocket;
+    const s = isoProject(p, r.x, r.y, isoGround(p, r.x, r.y, 0));
+    isoDrawEdgeArrow(s, '🚀', '#7aa8ff', '#0a1a3a', 34);   // aim at the hull, not the feet
+}
+
+// Floating tag over the parked rocket, like the build site's label
+function isoDrawShipLabel(x, gy) {
+    const bob = Math.sin(Date.now() / 400) * 2;
+    ctx.save();
+    ctx.globalAlpha = sceneAlpha * 0.9;
+    ctx.font = 'bold 14px -apple-system, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#0a1a3a';          // dark outline so it reads on pale planets
+    ctx.strokeText('🚀 YOUR SHIP', x, gy - 82 + bob);
+    ctx.fillStyle = '#9cc0ff';
+    ctx.fillText('🚀 YOUR SHIP', x, gy - 82 + bob);
+    ctx.restore();
+}
+
+// s: the target's screen point. Nothing is drawn while it's comfortably on
+// screen; otherwise the arrow sits on the edge along the line from the player.
+function isoDrawEdgeArrow(s, emoji, fill, stroke, lift = 0) {
+    s = { x: s.x, y: s.y - lift };
     const margin = 44;
     if (s.x > margin && s.x < CANVAS_W - margin && s.y > margin + 30 && s.y < CANVAS_H - margin) return;
 
@@ -921,10 +956,10 @@ function isoDrawPadArrow(p) {
     ctx.font = '20px -apple-system, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🏗️', -Math.cos(ang) * 26, -Math.sin(ang) * 26);
+    ctx.fillText(emoji, -Math.cos(ang) * 26, -Math.sin(ang) * 26);
     ctx.rotate(ang);
-    ctx.fillStyle = '#4ade80';
-    ctx.strokeStyle = '#0a2a14';
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
     ctx.lineWidth = 2;
     const grow = 1 + 0.15 * pulse;
     ctx.beginPath();
