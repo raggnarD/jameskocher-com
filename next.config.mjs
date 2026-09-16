@@ -19,8 +19,6 @@ const nextConfig = {
     ? {
         async rewrites() {
           return [
-            { source: '/kids-games', destination: '/kids-games/index.html' },
-            { source: '/kids-games/', destination: '/kids-games/index.html' },
             {
               source: '/netflix-resume',
               destination: '/netflix-resume/index.html',

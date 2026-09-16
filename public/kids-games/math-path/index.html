@@ -1,100 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Path</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="0; url=https://games.jameskocher.com/math-path/">
+<link rel="canonical" href="https://games.jameskocher.com/math-path/">
+<title>Moved to games.jameskocher.com</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0f1a;color:#e8eef7;display:grid;place-items:center;height:100vh;margin:0;text-align:center}a{color:#7dd3fc}</style>
 </head>
-<body>
-    <div class="game-container">
-        <header>
-            <h1>🚶 Math Path 💎</h1>
-            <p class="subtitle">Spin the tiles to build a path to the diamond!</p>
-            <button class="btn-back" onclick="window.location.href='../index.html'">← Back to Menu</button>
-        </header>
-
-        <!-- ── Setup screen ─────────────────────────────────────────────── -->
-        <div class="setup" id="setup">
-            <div class="setup-card">
-                <h2>Pick your math</h2>
-                <div class="chooser" id="gradeChooser"></div>
-
-                <h2>Pick your board</h2>
-                <div class="chooser" id="sizeChooser"></div>
-                <p class="chooser-note" id="chooserNote"></p>
-
-                <button class="btn-primary btn-start" id="startBtn">Start Playing!</button>
-            </div>
-        </div>
-
-        <!-- ── Game screen ──────────────────────────────────────────────── -->
-        <div class="game" id="game" hidden>
-            <div class="hud">
-                <div class="hud-item">
-                    <span class="hud-label" id="progressLabel">Difficulty</span>
-                    <span class="hud-value" id="boardNum">Very Easy</span>
-                    <span class="hud-size" id="boardSize">5×5</span>
-                </div>
-                <div class="hud-item" id="levelItem">
-                    <span class="hud-label">Level</span>
-                    <span class="hud-value" id="levelNum">1/5</span>
-                </div>
-                <div class="hud-item">
-                    <span class="hud-label">Math</span>
-                    <span class="hud-size" id="mathGrade">Kindergarten</span>
-                </div>
-                <div class="hud-item hud-moves">
-                    <span class="hud-label">Turns left</span>
-                    <span class="pips" id="pips"></span>
-                </div>
-                <div class="hud-footer">
-                    <div class="hud-item">
-                        <span class="hud-label">Solved</span>
-                        <span class="hud-value" id="solvedCount">0</span>
-                    </div>
-                    <div class="hud-buttons">
-                        <button class="btn-icon" id="muteBtn" title="Sound on/off">🔊</button>
-                        <button class="btn-secondary" id="newBoardBtn">New Board</button>
-                        <button class="btn-secondary" id="changeBtn">Change Level</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="board-wrap">
-                <div class="board" id="board"></div>
-                <div class="walker" id="walker" hidden></div>
-            </div>
-
-            <p class="hint" id="hint">Tap a tile to spin it.</p>
-        </div>
-    </div>
-
-    <!-- ── Math gate ────────────────────────────────────────────────────── -->
-    <div class="modal" id="mathModal" hidden>
-        <div class="modal-card">
-            <h2>Out of turns — solve this!</h2>
-            <div class="problem" id="problem"></div>
-            <div class="answer-row">
-                <span class="answer-label">Answer</span>
-                <span class="answer-value" id="answerValue">–</span>
-            </div>
-            <div class="keypad" id="keypad"></div>
-            <p class="math-feedback" id="mathFeedback"></p>
-        </div>
-    </div>
-
-    <!-- ── Win ──────────────────────────────────────────────────────────── -->
-    <div class="modal" id="winModal" hidden>
-        <div class="modal-card win-card">
-            <div class="win-emoji" id="winEmoji">🎉</div>
-            <h2 id="winTitle">You made it!</h2>
-            <p class="win-line" id="winLine"></p>
-            <button class="btn-primary" id="nextBoardBtn">Next Board →</button>
-        </div>
-    </div>
-
-    <script src="math.js"></script>
-    <script src="game.js"></script>
-</body>
+<body><p>The games moved. <a href="https://games.jameskocher.com/math-path/">Continue to games.jameskocher.com/math-path/</a></p></body>
 </html>
