@@ -22,7 +22,8 @@ export const projects: Project[] = [
     name: 'Kids Games',
     blurb:
       'A small collection of browser games I built for my kids — reading, math, and listening.',
-    href: '/kids-games/',
+    href: 'https://games.jameskocher.com/',
+    external: true,
   },
   {
     name: 'Rushroost',

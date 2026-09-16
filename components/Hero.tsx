@@ -17,7 +17,7 @@ const sections: { title: string; links: CatLink[] }[] = [
     links: [
       { label: 'Netflix Resume', href: '/netflix-resume/' },
       { label: 'RPG Skills', href: '/rpg-skills/' },
-      { label: 'Kids Games', href: '/kids-games/' },
+      { label: 'Kids Games', href: 'https://games.jameskocher.com/', external: true },
       { label: 'Rushroost', href: 'https://www.rushroost.com', external: true },
     ],
   },

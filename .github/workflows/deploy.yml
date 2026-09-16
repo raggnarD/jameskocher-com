@@ -61,7 +61,7 @@ jobs:
         env:
           PREFIX: ${{ steps.target.outputs.BASE_PATH }}
           # Whitespace-separated list of bundled sub-site directories.
-          BUNDLES: 'kids-games netflix-resume rpg-skills'
+          BUNDLES: 'netflix-resume rpg-skills'
         run: |
           set -e
           for B in $BUNDLES; do
