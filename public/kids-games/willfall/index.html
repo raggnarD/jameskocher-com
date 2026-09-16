@@ -213,6 +213,21 @@
             </div>
         </div>
 
+        <div id="warpScreen" class="overlay-screen hidden">
+            <div class="overlay-card warp-card" role="dialog" aria-labelledby="warpTitle">
+                <h2 id="warpTitle">⚡ Warp Drive</h2>
+                <p class="warp-sub">Jump to any level. Warping takes this run off the leaderboard.</p>
+                <div class="warp-map-wrap">
+                    <div class="warp-map" id="warpMap"></div>
+                </div>
+                <div class="warp-actions">
+                    <button type="button" class="btn-secondary" id="warpCancel">Cancel (Esc)</button>
+                    <button type="button" class="btn-primary" id="warpNext">⏭ Next level</button>
+                </div>
+                <p class="warp-hint">N = next level · Esc = back to the game</p>
+            </div>
+        </div>
+
         <div id="gameOverScreen" class="overlay-screen hidden">
             <div class="overlay-card">
                 <h2 id="gameOverTitle">💥 Game Over</h2>
@@ -265,5 +280,6 @@
     <script src="planet-iso.js"></script>
     <script src="cave.js"></script>
     <script src="shop.js"></script>
+    <script src="warp.js"></script>
 </body>
 </html>

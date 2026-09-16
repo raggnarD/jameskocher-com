@@ -238,6 +238,7 @@ const state = {
     planetStyle: 'iso', // 'iso' (Explore) | 'side' (Classic) — see planet.js
     cheated: false,     // true if warp easter egg used — disqualifies high score
     warpEffect: 0,      // countdown (seconds) for the warp flash animation
+    warpLabel: '',      // where the last warp went, for the splash
 
     // Stage machine — belts and planets alternate
     phase: 'belt',      // 'belt' | 'descend' | 'planet' | 'ascend'
@@ -269,9 +270,9 @@ function hitboxMult()  { return Math.pow(0.85, upgLevel('deflector')); }
 // Keys
 const keys = {};
 
-// Easter egg: type T-U-R-B-O during gameplay to warp to the next tier.
+// Easter egg: type T-U-R-B-O during gameplay to open the warp map (warp.js).
 // None of these letters overlap with WASD movement keys.
-// Using the warp disqualifies the run from the high-score leaderboard.
+// Using a warp disqualifies the run from the high-score leaderboard.
 const WARP_CODE = ['t','u','r','b','o'];
 let warpBuffer = [];
 
@@ -293,7 +294,7 @@ window.addEventListener('keydown', (e) => {
             if (warpBuffer.length > WARP_CODE.length) warpBuffer.shift();
             if (warpBuffer.join('') === WARP_CODE.join('')) {
                 warpBuffer = [];
-                warpSkip();
+                openWarpMenu();
             }
         }
     }
@@ -610,28 +611,6 @@ function drawShards() {
     }
 }
 
-// TURBO now skips to the *next stage*, not the next belt:
-//   in a belt   → end the belt and descend to this tier's planet
-//   on a planet → abandon it (no puzzle, no bonus) and launch to the next belt
-function warpSkip() {
-    if (state.phase !== 'belt' && state.phase !== 'planet') return;
-    state.cheated = true;
-    state.warpEffect = 2.0;
-    flashCanvas('#9966ff');
-
-    if (state.phase === 'belt') {
-        state.miles = TIERS[state.beltIndex].miles + BELT_LENGTH;
-        state.stuckAsteroid = null;
-        state.asteroids = [];
-        state.shards = [];
-        state.gasMiles = tankMiles();
-        updateHUD();
-        openShop('belt', startDescent);
-    } else {
-        startAscent();
-    }
-}
-
 function triggerGasMath() {
     showMath({
         reason: '⛽ Out of gas! Solve to refuel.',
@@ -800,9 +779,7 @@ function drawFlash() {
 
 function drawWarpSplash() {
     if (state.warpEffect <= 0) return;
-    const label = state.phase === 'descend' || state.phase === 'planet'
-        ? `Skipping to ${TIERS[state.beltIndex].emoji} ${TIERS[state.beltIndex].name} Planet`
-        : 'Skipping ahead';
+    const label = `Warping to ${state.warpLabel}`;
     ctx.save();
     ctx.globalAlpha = Math.min(1, state.warpEffect);
     ctx.textAlign = 'center';

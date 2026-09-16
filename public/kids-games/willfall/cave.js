@@ -302,12 +302,6 @@ function caveExit(p) {
     caveStartFade(p, () => caveReturn(p));
 }
 
-// Instant, for a TURBO warp fired from inside
-function caveForceExit(p) {
-    p.caveFade = null;
-    if (p.maze) caveReturn(p);
-}
-
 function caveReturn(p) {
     const c = p.cave, m = p.man;
     p.maze = null;

@@ -233,7 +233,6 @@ function startDescent() {
 function startAscent() {
     const p = state.planet;
     if (p) {
-        if (p.maze || p.caveFade) caveForceExit(p);   // TURBO from inside a cave
         p.man.hidden = true;          // he's aboard now
         p.rocketLanded = false;       // the launch draws its own rocket
         surfaceStyle(p).prepareLaunch(p);
@@ -268,8 +267,13 @@ function updateTransition(dt) {
 }
 
 function beginNextBelt() {
-    state.beltIndex += 1;
-    state.miles = TIERS[state.beltIndex].miles;
+    enterBelt(state.beltIndex + 1);
+}
+
+// Also the landing spot for a TURBO warp to a belt (warp.js)
+function enterBelt(tierIndex) {
+    state.beltIndex = tierIndex;
+    state.miles = TIERS[tierIndex].miles;
     state.phase = 'belt';
     state.asteroids = [];
     state.shards = [];
