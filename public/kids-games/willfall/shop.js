@@ -1182,7 +1182,8 @@ function shopAnimStart() {
     if (shopAnimId) return;
     const tick = () => {
         shopAnimId = requestAnimationFrame(tick);
-        if (shopTab === 'interior' && state.chests.length) drawShopPreview();
+        if ((shopTab === 'interior' && state.chests.length) ||
+            (shopTab !== 'interior' && isExplore())) drawShopPreview();
         drawChestPopup();
     };
     shopAnimId = requestAnimationFrame(tick);
@@ -1230,7 +1231,12 @@ function drawExteriorPreview(c, W, H) {
     c.save();
     c.translate(W / 2, H / 2 - 10);
     c.scale(2.6, 2.6);
-    drawShipSkin(c, false, state.shipSkin, paletteFor(SHIP_SKINS[state.shipSkin], sh));
+    // Explore's 3D ship turns slowly on its stand while paints are tried on
+    drawShipStyled(c, false, {
+        skinIdx: state.shipSkin,
+        pal: paletteFor(SHIP_SKINS[state.shipSkin], sh),
+        pose: { yaw: performance.now() / 1000 * 0.6 }
+    });
     c.restore();
 
     const paint = SHOP_INDEX[sh.equipped.paint];

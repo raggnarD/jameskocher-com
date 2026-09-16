@@ -18,7 +18,8 @@ const SHIP_MOVE_PX_PER_SEC = 320;               // on-screen movement speed
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Ship skins — each exposes draw(ctx, thrusting, palette) in local coords
-// (origin = center, nose pointing +x).
+// (origin = center, nose pointing +x). Explore runs draw the 3D model at the
+// same index in SHIP_MODEL_BUILDERS (ship3d.js) — keep the two lists in order.
 //
 // Hull colors come from the palette argument, never from literals, so the shop
 // can repaint any ship. Every hull path is closed and then handed to
@@ -235,7 +236,7 @@ const state = {
     mathCurrent: null,
     bestMiles: 0,
     shipSkin: 0,        // index into SHIP_SKINS — cosmetic only
-    planetStyle: 'iso', // 'iso' (Explore) | 'side' (Classic) — see planet.js
+    planetStyle: 'iso', // 'iso' (Explore: 3D belts, ships and planets) | 'side' (Classic) — see isExplore()
     cheated: false,     // true if warp easter egg used — disqualifies high score
     warpEffect: 0,      // countdown (seconds) for the warp flash animation
     warpLabel: '',      // where the last warp went, for the splash
@@ -324,9 +325,10 @@ function updateCamera() {
 }
 
 // The band of world the asteroid field is kept alive in — half a screen of
-// margin above and below what the player can see.
-function bandTop() { return state.camY - CANVAS_H * (BAND_MULT - 1) / 2; }
-function bandHeight() { return CANVAS_H * BAND_MULT; }
+// margin above and below what the player can see. Explore's tilted camera
+// sees a differently shaped strip of the plane (belt-iso.js).
+function bandTop() { return isExplore() ? beltIsoBandTop() : state.camY - CANVAS_H * (BAND_MULT - 1) / 2; }
+function bandHeight() { return isExplore() ? beltIsoBandHeight() : CANVAS_H * BAND_MULT; }
 
 // Each tier beyond Rock adds 10% to spawn rate, asteroid speed, and angular variance.
 // Rock(0)=1.0, Bronze(1)=1.10, Silver(2)=1.20, ..., Obsidian(9)=1.90.
@@ -342,9 +344,12 @@ function spawnAsteroid(tierIndex, x, y) {
     const baseSpeed = 140 * mult;                              // px/sec drift left
     const speed = baseSpeed + Math.random() * 80 * mult;       // variance also scales
     const radius = 18 + Math.random() * (34 * Math.min(mult, 1.5));  // 18-52 px at Rock, scales with tier
+    const ay = y === undefined ? bandTop() + Math.random() * bandHeight() : y;
+    // Enter just past the right edge of the rock's own row (Explore's glow is wider)
+    const edge = CANVAS_W + radius * (isExplore() ? 1.4 : 1) + 10;
     state.asteroids.push({
-        x: x === undefined ? CANVAS_W + radius + 10 : x,
-        y: y === undefined ? bandTop() + Math.random() * bandHeight() : y,
+        x: x === undefined ? beltWorldXAtScreen(edge, ay) : x,
+        y: ay,
         vx: -speed,
         vy: (Math.random() - 0.5) * 30 * mult,                 // wider vy = more angles
         r: radius,
@@ -359,9 +364,9 @@ function spawnAsteroid(tierIndex, x, y) {
 function spawnIntervalMs(tierIndex) {
     const base = 800;   // Rock spawns every ~0.8 s; higher tiers get proportionally faster
     const min = 280;
-    // Rocks now enter across a band BAND_MULT screens tall, so the same interval
-    // would leave only 1/BAND_MULT as many of them in view. Spawn that much faster.
-    return Math.max(min, Math.round(base / difficultyMult(tierIndex))) / BAND_MULT;
+    // Rocks now enter across a band several screens tall (BAND_MULT in Classic),
+    // so the same interval would leave far fewer of them in view. Spawn that much faster.
+    return Math.max(min, Math.round(base / difficultyMult(tierIndex))) / (bandHeight() / CANVAS_H);
 }
 
 // Climbing or diving pulls a strip of never-populated sky into the band. Seed it
@@ -378,7 +383,8 @@ function backfillBand(tierIndex, y0, y1) {
     let n = Math.floor(expected);
     if (Math.random() < expected - n) n++;
     for (let i = 0; i < n; i++) {
-        spawnAsteroid(tierIndex, Math.random() * (CANVAS_W + 60), y0 + Math.random() * h);
+        const y = y0 + Math.random() * h;
+        spawnAsteroid(tierIndex, beltWorldXAtScreen(Math.random() * (CANVAS_W + 60), y), y);
     }
 }
 
@@ -438,6 +444,7 @@ function update(dt) {
     }
 
     const scrollRate = thrusting ? BOOST_SCROLL_RATE : IDLE_SCROLL_RATE;
+    if (isExplore()) beltIsoTick(dt, vy, scrollRate);
 
     // Score: full 1000 mi/s while thrusting, gentle drip while coasting.
     if (thrusting) {
@@ -481,9 +488,12 @@ function update(dt) {
         a.y += a.vy * scrollRate * dt;
         a.rot += a.rotSpeed * dt;
     }
-    const camMid = state.camY + CANVAS_H / 2;
+    const bandMid = bandTop() + bandHeight() / 2;
+    const keepY = bandHeight() / 2 + CANVAS_H * 0.6;
+    const explore = isExplore();
     state.asteroids = state.asteroids.filter(a =>
-        a.stuck || (a.x + a.r > -10 && Math.abs(a.y - camMid) < CANVAS_H * 1.6));
+        a.stuck || ((explore ? beltScreenX(a.x, a.y) + a.r * 1.4 : a.x + a.r) > -10 &&
+                    Math.abs(a.y - bandMid) < keepY));
 
     // Backdrop parallax — idle drift matches the visible scroll rate
     advanceBackdrop(dt, thrusting ? 80 : 20);
@@ -809,6 +819,9 @@ function drawCheatBadge() {
 }
 
 function drawBelt() {
+    // belt-iso.js loads after this file — the idle start-screen loop can tick first
+    if (isExplore() && typeof drawBeltIso === 'function') { drawBeltIso(); return; }
+
     // Bg
     ctx.fillStyle = '#02020a';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -835,14 +848,17 @@ function drawBelt() {
 
     ctx.restore();
 
-    // Tier banner at top
+    drawBeltLabels(tier);
+}
+
+// Tier name in the corner, plus the "entering X belt" banner after a blast-off
+function drawBeltLabels(tier) {
     ctx.fillStyle = '#ffffffcc';
     ctx.font = '14px -apple-system, system-ui, sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(`${tier.emoji} ${tier.name} belt`, CANVAS_W - 12, 22);
     ctx.textAlign = 'left';
 
-    // "Entering X belt" banner after a blast-off
     if (state.tierBanner > 0) {
         ctx.save();
         ctx.globalAlpha = Math.min(1, state.tierBanner);
@@ -876,7 +892,7 @@ function renderShipPreviews() {
         pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
         pCtx.save();
         pCtx.translate(pCanvas.width / 2, pCanvas.height / 2);
-        drawShipSkin(pCtx, false, idx);
+        drawShipStyled(pCtx, false, { skinIdx: idx, pose: { yaw: 0.5 } });
         pCtx.restore();
     });
 }
@@ -959,6 +975,7 @@ async function startGame() {
     state.planet = null;
     state.transition = null;
     state.tierBanner = 0;
+    beltIsoReset();
     warpBuffer = [];
     initBackdrop(0);
     showPlanetHUD(false);
@@ -1089,6 +1106,7 @@ document.querySelectorAll('.planet-style-btn').forEach(btn => {
         document.querySelectorAll('.planet-style-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         state.planetStyle = btn.dataset.style;
+        renderShipPreviews();       // Explore previews are 3D, Classic flat
     });
 });
 

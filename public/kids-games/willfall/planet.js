@@ -284,6 +284,7 @@ function enterBelt(tierIndex) {
     state.camY = 0;
     initBackdrop(state.beltIndex);   // every belt gets its own sky
     state.tierBanner = 2.2;
+    beltIsoReset();
     updateHUD();
 }
 
@@ -561,8 +562,8 @@ function drawBaseAt(p, x, gy, padRY) {
 function drawRocketAt(x, gy) {
     ctx.save();
     ctx.translate(x, gy - 34);
-    ctx.rotate(-Math.PI / 2);            // stand the ship on its tail
-    drawShipSkin(ctx, false);
+    // stand the ship on its tail
+    drawShipStyled(ctx, false, { angle: -Math.PI / 2, pose: { pitch: Math.PI / 2, view: VIEW_ISO } });
     ctx.restore();
     // Landing legs
     ctx.strokeStyle = '#8fa4c8'; ctx.lineWidth = 3;
@@ -617,15 +618,14 @@ function drawTransition() {
         ctx.strokeStyle = tier.glow + '88'; ctx.lineWidth = 3;
         ctx.stroke();
 
-        const sx = 120 + (CANVAS_W * 0.62 - 120) * k;
-        const shipY = shipScreenY();          // the belt camera may be far from y=0
-        const sy = shipY + (cy - rad - 30 - shipY) * k;
+        const start = shipScreenPos();        // the belt camera may be far from y=0
+        const sx = start.x + (CANVAS_W * 0.62 - start.x) * k;
+        const sy = start.y + (cy - rad - 30 - start.y) * k;
         const scale = 1 - 0.65 * k;
         ctx.save();
         ctx.translate(sx, sy);
-        ctx.rotate(k * Math.PI / 2.4);
         ctx.scale(scale, scale);
-        drawShipSkin(ctx, true);
+        drawShipStyled(ctx, true, { angle: k * Math.PI / 2.4, pose: { pitch: -1.1 * k, view: VIEW_BELT } });
         ctx.restore();
 
         // Crossfade into the surface over the last third
@@ -672,14 +672,17 @@ function drawAscent(tr, p) {
         rocketY = worldY - camY;
     }
 
-    // Ease into the belt's launch pose: x 120, mid-height, nose to the right
-    const x = rocketX + (120 - rocketX) * exit;
-    const y = rocketY + (CANVAS_H / 2 - rocketY) * exit;
+    // Ease into the belt's launch pose: where the next belt starts, nose to the right
+    const launch = beltLaunchScreenPos();
+    const x = rocketX + (launch.x - rocketX) * exit;
+    const y = rocketY + (launch.y - rocketY) * exit;
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(-Math.PI / 2 * (1 - exit));
     ctx.scale(1 - 0.12 * climb * (1 - exit), 1 - 0.12 * climb * (1 - exit));
-    drawShipSkin(ctx, true);
+    drawShipStyled(ctx, true, {
+        angle: -Math.PI / 2 * (1 - exit),
+        pose: { pitch: Math.PI / 2 * (1 - exit), view: lerpView(VIEW_ISO, VIEW_BELT, exit) }
+    });
     ctx.restore();
 
     const nextName = state.beltIndex >= TIERS.length - 1
