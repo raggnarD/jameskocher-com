@@ -19,6 +19,7 @@ const sections: { title: string; links: CatLink[] }[] = [
       { label: 'RPG Skills', href: '/rpg-skills/' },
       { label: 'Kids Games', href: 'https://games.jameskocher.com/', external: true },
       { label: 'Rushroost', href: 'https://www.rushroost.com', external: true },
+      { label: 'Case Study', href: '/case-study/' },
     ],
   },
   {

@@ -7,3 +7,6 @@ out
 source/
 .claude/
 CLAUDE.md
+# Local only: the skill package holds deck build material, mockups are scratch.
+*.skill
+mockups/

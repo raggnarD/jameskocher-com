@@ -119,6 +119,24 @@ jobs:
           fi
           echo "All bundled sub-site paths properly prefixed for staging."
 
+      # Case-study decks are committed here only as ciphertext, pushed by the
+      # publish workflow in the private case-studies repo. Fail rather than ship
+      # a deck route with nothing (or something unencrypted) behind it.
+      - name: Verify encrypted case-study decks
+        run: |
+          set -e
+          for SLUG in $(grep -o "slug: '[^']*'" content/case-studies.ts | cut -d"'" -f2); do
+            F="out/case-study/$SLUG/deck.enc"
+            if [ "$(head -c 5 "$F" 2>/dev/null)" != "JKCS1" ]; then
+              echo "::error::Missing or invalid $F. Run the publish workflow in the private case-studies repo."
+              exit 1
+            fi
+          done
+          if find out/case-study -mindepth 2 -type f ! -name deck.enc ! -name 'index.*' | grep -q .; then
+            echo "::error::Unexpected file under out/case-study/."
+            exit 1
+          fi
+
       - name: Add .nojekyll
         run: touch out/.nojekyll
 
