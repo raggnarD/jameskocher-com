@@ -1,6 +1,7 @@
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import AutoCoreCard from '@/components/case-study/AutoCoreCard';
+import PharmaSalesStudyCard from '@/components/case-study/PharmaSalesStudyCard';
 
 export const metadata = {
   title: 'Case Study — James Kocher',
@@ -18,6 +19,9 @@ export default function CaseStudyPage() {
           <ul className="grid gap-12 justify-items-center sm:justify-items-start sm:grid-cols-[repeat(auto-fill,minmax(280px,320px))]">
             <li className="w-full max-w-[320px]">
               <AutoCoreCard />
+            </li>
+            <li className="w-full max-w-[320px]">
+              <PharmaSalesStudyCard />
             </li>
           </ul>
         </section>

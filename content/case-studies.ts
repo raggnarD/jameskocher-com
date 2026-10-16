@@ -6,4 +6,7 @@ export type CaseStudy = {
   title: string;
 };
 
-export const caseStudies: CaseStudy[] = [{ slug: 'autocore', title: 'Hold the Work Line' }];
+export const caseStudies: CaseStudy[] = [
+  { slug: 'autocore', title: 'Hold the Work Line' },
+  { slug: 'pharma-sales-study', title: 'Pharma Sales Reporting Study Guide' },
+];
