@@ -1,4 +1,4 @@
-/* AutoCore case-study card. Colours and type come from the deck (public/autocore/), not the site theme. */
+/* AutoCore case-study card. Colours and type come from the deck, not the site theme. */
 /* --f: 0 front, 1 flipped. --px/--py: pointer position across the card, 0–1. */
 .card {
   --f: 0;
