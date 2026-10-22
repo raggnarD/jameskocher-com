@@ -111,6 +111,7 @@ export default function Tour() {
         <div className="kicker" id="pKick" />
         <h2 id="pTitle" />
         <div className="where" id="pWhere" />
+        <p className="p-cap" id="pCap" />
         <p id="pBlurb" />
         <div className="stats">
           <div>
@@ -133,6 +134,26 @@ export default function Tour() {
           </button>
         </div>
       </aside>
+
+      {/* Phone (<= 639px) tour controls: a slim dock at the bottom; the card above is used on wider screens and at the finale. */}
+      <nav className="mctl" id="mctl" aria-label="Tour controls" hidden>
+        <button className="m-btn m-prev" id="mPrev" aria-label="Previous stop">
+          <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d="M11 1.5v11L1.5 7z" fill="currentColor" /></svg>
+        </button>
+        <button className="m-btn m-play" id="mPlay" aria-label="Pause tour">
+          <svg className="m-ring" viewBox="0 0 44 44" aria-hidden="true">
+            <circle cx="22" cy="22" r="19" />
+            <circle id="mRing" cx="22" cy="22" r="19" />
+          </svg>
+          <span className="m-ico" aria-hidden="true" />
+        </button>
+        <button className="m-btn m-next" id="mNext" aria-label="Next stop">
+          <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d="M3 1.5v11L12.5 7z" fill="currentColor" /></svg>
+        </button>
+        <button className="m-btn m-exit" id="mExit" aria-label="Exit tour">
+          <svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+        </button>
+      </nav>
 
       <section className="tour" id="tour" aria-label="Guided tour" hidden>
         <div className="t-step">

@@ -260,3 +260,29 @@ html:has(.recon), body:has(.recon) { overflow: hidden; height: 100%; }
   .recon .panel, .recon .tour, .recon .compass, .recon .home-pill { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .recon .panel, .recon .tour { background: rgba(10,9,8,.94); }
 }
+
+/* ---------- phone tour dock (<= 639px)
+ * The tour card is replaced by one slim pill at the bottom (prev, play/pause with
+ * a progress ring, next, exit) and the caption moves into the panel. At the
+ * finale the card comes back in its end state (Explore freely / Replay / Home).
+ */
+.recon .mctl, .recon .panel .p-cap { display: none; }
+@media (max-width: 639px) {
+  .recon .tour:not(.end) { display: none; }
+  .recon .mctl:not([hidden]):not(.end) { display: flex; position: fixed; z-index: 12; align-items: center; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); gap: 2px; padding: 5px; border-radius: 28px; background: rgba(10,9,8,.94); border: 1px solid var(--line); }
+  .recon .m-btn { position: relative; width: 44px; height: 44px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; color: #fff; font: 15px/1 var(--sans); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .recon .m-btn:disabled { opacity: .3; cursor: default; }
+  .recon .m-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+  .recon .m-play { margin: 0 4px; }
+  .recon .m-exit { margin-left: 6px; color: var(--muted); }
+  .recon .m-exit::before { content: ''; position: absolute; left: -4px; top: 12px; bottom: 12px; width: 1px; background: var(--line); }
+  .recon .m-ring { position: absolute; left: 0; top: 0; width: 44px; height: 44px; transform: rotate(-90deg); pointer-events: none; }
+  .recon .m-ring circle { fill: none; stroke: rgba(255,255,255,.16); stroke-width: 2.5; }
+  .recon .m-ring #mRing { stroke: var(--brand); stroke-dasharray: 119.38; stroke-dashoffset: 119.38; }
+  .recon .mctl.paused #mRing { opacity: .55; }
+  .recon .m-ico { position: absolute; left: 0; top: 0; width: 44px; height: 44px; display: grid; place-items: center; }
+
+  .recon.touring .panel { bottom: calc(12px + 56px + 10px + env(safe-area-inset-bottom)); max-height: 34vh; transform: none; } /* fade only: sliding up would cross the dock */
+  .recon.touring .panel .p-cap { display: block; margin: 6px 0 8px; font-size: 14px; line-height: 1.35; color: var(--ink); }
+  .recon.touring .panel .p-cap:empty { display: none; }
+}

@@ -360,6 +360,10 @@ export function startTour(root: HTMLElement): () => void {
     const tStepEl = $('tStep'), tNameEl = $('tName'), tCapEl = $('tCap');
     const tPlay = $<HTMLButtonElement>('tPlay'), tPrev = $<HTMLButtonElement>('tPrev'), tNext = $<HTMLButtonElement>('tNext');
     const segs = [...root.querySelectorAll<HTMLElement>('#tSeg i')];
+    // phone dock (<= 639px, CSS decides): same tour state as the card, caption moves into the panel
+    const mctl = $('mctl'), mPlay = $<HTMLButtonElement>('mPlay'), mPrev = $<HTMLButtonElement>('mPrev'), mNext = $<HTMLButtonElement>('mNext');
+    const mRing = $<SVGCircleElement>('mRing'), pCap = $('pCap');
+    const RING = 2 * Math.PI * 19; // circumference of the play button's progress ring (r=19)
     // step: -1 = intro (before stop 1), 0..3 = stops, 4 = finale
     const tour = { on: true, step: -1, paused: RM, el: 0 };
 
@@ -368,6 +372,7 @@ export function startTour(root: HTMLElement): () => void {
       const f = Math.min(1, tour.el / DWELL), s = tour.step;
       if (s >= 0 && s < OBJ.length) (segs[s].firstChild as HTMLElement).style.width = f * 100 + '%';
       pCount.style.transform = `scaleX(${RM ? 1 : 1 - f})`; // reduced motion: static full bar
+      mRing.style.strokeDashoffset = String(s >= 0 && s < OBJ.length ? RING * (1 - f) : RING);
     }
     function panelMore() { panel.classList.toggle('more', panel.scrollHeight - panel.scrollTop - panel.clientHeight > 4); }
     on(panel, 'scroll', panelMore); on(window, 'resize', panelMore);
@@ -385,6 +390,15 @@ export function startTour(root: HTMLElement): () => void {
       tPlay.innerHTML = play ? '▶<span>Play</span>' : '❚❚<span>Pause</span>';
       tPlay.setAttribute('aria-label', play ? 'Play tour' : 'Pause tour');
       tPrev.disabled = s <= 0;
+      // phone dock
+      mctl.classList.toggle('end', end);
+      mctl.classList.toggle('paused', tour.paused);
+      root.querySelector('.m-ico')!.innerHTML = play
+        ? '<svg viewBox="0 0 14 14" width="14" height="14"><path d="M3 1.5v11l9.5-5.5z" fill="currentColor"/></svg>'
+        : '<svg viewBox="0 0 14 14" width="14" height="14"><rect x="2.5" y="1.5" width="3" height="11" fill="currentColor"/><rect x="8.5" y="1.5" width="3" height="11" fill="currentColor"/></svg>';
+      mPlay.setAttribute('aria-label', `${play ? 'Play' : 'Pause'} tour${s >= 0 && !end ? `, stop ${s + 1} of ${OBJ.length}: ${OBJ[s].sec.title}` : ''}`);
+      mPrev.disabled = s <= 0; mNext.disabled = end;
+      pCap.textContent = s >= 0 && !end ? CAPTIONS[s] : '';
     }
     function tourGo(k: number) {
       tour.step = Math.max(0, Math.min(OBJ.length, k)); tour.el = 0;
@@ -399,11 +413,11 @@ export function startTour(root: HTMLElement): () => void {
       setPaused(!tour.paused);
     }
     function startGuided() {
-      tour.on = true; root.classList.add('touring'); tourBox.hidden = false;
+      tour.on = true; root.classList.add('touring'); tourBox.hidden = false; mctl.hidden = false;
       tour.paused = false; tourGo(0);
     }
     function exitTour() {
-      tour.on = false; root.classList.remove('touring'); tourBox.hidden = true; orbit.speed = 0;
+      tour.on = false; root.classList.remove('touring'); tourBox.hidden = true; mctl.hidden = true; orbit.speed = 0;
       if (sel < 0 && !tw) C.autoRotate = true;
       const f = panel.classList.contains('show') ? $('back') : $('tourGo');
       f.focus({ preventScroll: true });
@@ -415,10 +429,15 @@ export function startTour(root: HTMLElement): () => void {
     $('tFree').onclick = exitTour;
     $('tReplay').onclick = () => { tour.paused = false; tourGo(0); };
     $('tourGo').onclick = startGuided;
+    mPlay.onclick = togglePlay;
+    mNext.onclick = () => tourGo(tour.step + 1);
+    mPrev.onclick = () => tourGo(tour.step - 1);
+    $('mExit').onclick = exitTour;
+
     C.addEventListener('start', () => { orbit.speed = 0; tourPause(); }); // user orbit / zoom takes over
     on($('pLinks'), 'pointerdown', tourPause);
     on($('pLinks'), 'focusin', tourPause);
-    root.classList.add('touring'); tourBox.hidden = false; tourRender();
+    root.classList.add('touring'); tourBox.hidden = false; mctl.hidden = false; tourRender();
 
     on(window, 'keydown', (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -469,7 +488,8 @@ export function startTour(root: HTMLElement): () => void {
     function obstacleRects() {
       const out: Rect[] = [];
       const add = (el: Element) => { const b = el.getBoundingClientRect(); out.push({ x: b.left - GAP, y: b.top - GAP, r: b.right + GAP, b: b.bottom + GAP }); };
-      if (!tourBox.hidden) add(tourBox);
+      if (!tourBox.hidden && tourBox.getClientRects().length) add(tourBox);
+      if (!mctl.hidden && mctl.getClientRects().length) add(mctl);
       if (panel.classList.contains('show')) add(panel);
       if (!root.classList.contains('focus') && tourBox.hidden) add(heroEl); // headline in free overview
       if (getComputedStyle(hudEl).display !== 'none') add(hudEl);
