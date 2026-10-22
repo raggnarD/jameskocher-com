@@ -244,6 +244,11 @@ html:has(.recon), body:has(.recon) { overflow: hidden; height: 100%; }
   .recon .hero h1 { font-size: 24px; }
   .recon .hero p { display: none; }
 }
+/* very narrow landscape (card ~200px): controls + Exit leave no room for the stop name on one row */
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 700px) {
+  .recon .tour { grid-template-columns: 1fr auto; grid-template-areas: "step exit" "cap cap" "seg seg" "ctl ctl"; }
+  .recon .t-end { flex-wrap: wrap; }
+}
 @media (prefers-reduced-motion: reduce) { .recon .panel { transition: opacity .2s, visibility 0s .2s; } .recon .panel.show { transition-delay: 0s; } }
 /* touch: 44px targets, and no backdrop blur over the always-redrawing canvas */
 @media (pointer: coarse) {

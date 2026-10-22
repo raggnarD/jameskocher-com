@@ -27,7 +27,9 @@
 }
 
 /* brand: JK square that rolls and tilts on hover, plus the name with an underline */
-.brand { gap: 12px; padding: 0 16px 0 5px; font-weight: 700; font-size: 13px; letter-spacing: .24em; text-transform: uppercase; text-shadow: 0 1px 8px rgb(0 0 0/.4); }
+/* 5px all round the JK square; the chip's corners are concentric with the square's (9px + 5px), and the
+   right padding drops the name's trailing letter-spacing so both ends look equally spaced */
+.brand { gap: 12px; padding: 0 calc(17px - .24em) 0 5px; border-radius: 14px; font-weight: 700; font-size: 13px; letter-spacing: .24em; text-transform: uppercase; text-shadow: 0 1px 8px rgb(0 0 0/.4); }
 .brand::after { content: ""; position: absolute; left: 51px; right: 16px; bottom: 11px; height: 1px; background: var(--brand); transform: scaleX(0); transform-origin: 0 50%; transition: transform .45s var(--ease); }
 .brand:hover::after { transform: scaleX(1); }
 .mk { position: relative; display: block; flex: none; width: 34px; height: 34px; border-radius: 9px; overflow: hidden; background: var(--brand); color: #140a05; text-shadow: none; letter-spacing: 0; transition: transform .5s cubic-bezier(.34, 1.56, .64, 1); }
@@ -79,7 +81,7 @@
   .inner { padding: 0 16px; gap: 8px; }
   .right { display: none; }
   .menu { display: flex; margin-right: 0; }
-  .brand { gap: 10px; padding-right: 14px; font-size: 12px; letter-spacing: .22em; }
+  .brand { gap: 10px; padding-right: calc(15px - .22em); font-size: 12px; letter-spacing: .22em; }
   .brand::after { left: 49px; right: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {

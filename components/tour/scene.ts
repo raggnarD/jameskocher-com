@@ -287,8 +287,18 @@ export function startTour(root: HTMLElement): () => void {
     const OVER = { pos: new THREE.Vector3(3.2, 12.5, -9), target: new THREE.Vector3(-0.3, -0.9, 1.2) };
     let tw: { t: number; dur: number; p0: THREE.Vector3; t0: THREE.Vector3; p1: THREE.Vector3; t1: THREE.Vector3 } | null = null;
     const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Guided-tour dwell orbit: once a flight lands, the camera drifts around the
+    // current target (same Y axis as free-explore autoRotate, polar angle fixed).
+    // The sweep is theta = ARC * sin(phase), so it eases out at the ends of a
+    // small arc and back; the speed itself ramps in/out over ~1 s.
+    const ORBIT_SPEED = 0.03; // rad/s at the centre of the arc; free explore's autoRotate 0.35 = ~0.037 rad/s
+    const ORBIT_ARC = 0.22, ORBIT_ARC_FINALE = 0.45; // rad either side of where the flight landed
+    const ORBIT_EASE = 0.35; // s, time constant of the speed ramp (~1 s to full speed)
+    const orbit = { speed: 0, phase: 0, theta: 0 };
+    const orbitAxis = new THREE.Vector3(0, 1, 0), orbitOff = new THREE.Vector3();
+    function orbitReset() { orbit.speed = 0; orbit.phase = 0; orbit.theta = 0; }
     function flyTo(pos: THREE.Vector3, target: THREE.Vector3, dur = 1.8) {
-      C.enabled = false; C.autoRotate = false;
+      C.enabled = false; C.autoRotate = false; orbitReset();
       if (RM) dur = Math.min(dur, 0.45);
       tw = { t: 0, dur, p0: camera.position.clone(), t0: C.target.clone(), p1: pos.clone(), t1: target.clone() };
     }
@@ -393,7 +403,7 @@ export function startTour(root: HTMLElement): () => void {
       tour.paused = false; tourGo(0);
     }
     function exitTour() {
-      tour.on = false; root.classList.remove('touring'); tourBox.hidden = true;
+      tour.on = false; root.classList.remove('touring'); tourBox.hidden = true; orbit.speed = 0;
       if (sel < 0 && !tw) C.autoRotate = true;
       const f = panel.classList.contains('show') ? $('back') : $('tourGo');
       f.focus({ preventScroll: true });
@@ -405,7 +415,7 @@ export function startTour(root: HTMLElement): () => void {
     $('tFree').onclick = exitTour;
     $('tReplay').onclick = () => { tour.paused = false; tourGo(0); };
     $('tourGo').onclick = startGuided;
-    C.addEventListener('start', tourPause); // user orbit / zoom takes over
+    C.addEventListener('start', () => { orbit.speed = 0; tourPause(); }); // user orbit / zoom takes over
     on($('pLinks'), 'pointerdown', tourPause);
     on($('pLinks'), 'focusin', tourPause);
     root.classList.add('touring'); tourBox.hidden = false; tourRender();
@@ -466,7 +476,7 @@ export function startTour(root: HTMLElement): () => void {
       return out;
     }
     function layoutPins() {
-      const W = innerWidth, H = innerHeight, minY = 58, placed = obstacleRects();
+      const W = innerWidth, H = innerHeight, minY = 58, placed = obstacleRects(), chrome = placed.slice();
       const order = OBJ.map((o, k) => k).sort((a, b) => (+OBJ[b].el.classList.contains('on') - +OBJ[a].el.classList.contains('on')) || a - b);
       for (const k of order) {
         const o = OBJ[k];
@@ -497,6 +507,11 @@ export function startTour(root: HTMLElement): () => void {
         const dx = x - (top.x - 12), dy = y - (top.y - h);
         o.nx = o.nx == null ? dx : o.nx + (dx - o.nx) * (RM ? 1 : 0.25);
         o.ny = o.ny == null ? dy : o.ny + (dy - o.ny) * (RM ? 1 : 0.25);
+        // ...but never let the glide drag a label across the tour card or panel: jump to the clear spot
+        if (top.ok && !buried) {
+          const ex = top.x - 12 + o.nx, ey = top.y - h + o.ny;
+          if (chrome.some((p) => overlap({ x: ex, y: ey, r: ex + w, b: ey + h }, p))) { o.nx = dx; o.ny = dy; }
+        }
         const bx = top.x - 12 + o.nx, by = top.y - h + o.ny;
         const show = top.ok && !buried;
         o.el.style.opacity = show ? '1' : '0'; o.el.style.pointerEvents = show ? '' : 'none';
@@ -531,6 +546,17 @@ export function startTour(root: HTMLElement): () => void {
           if (tour.el >= DWELL) tourGo(tour.step + 1);
           else setProgress();
         }
+      }
+      // dwell orbit: runs at a landed stop or the finale while playing; eases to a stop on pause
+      const orbitWant = tour.on && !tour.paused && !tw && !RM && tour.step >= 0 && C.enabled ? ORBIT_SPEED : 0;
+      orbit.speed += (orbitWant - orbit.speed) * (1 - Math.exp(-dt / ORBIT_EASE));
+      if (orbit.speed > 1e-5) {
+        const arc = tour.step >= OBJ.length ? ORBIT_ARC_FINALE : ORBIT_ARC;
+        orbit.phase += (orbit.speed * dt) / arc;
+        const th = arc * Math.sin(orbit.phase), d = th - orbit.theta;
+        orbit.theta = th;
+        orbitOff.copy(camera.position).sub(C.target).applyAxisAngle(orbitAxis, d);
+        camera.position.copy(C.target).add(orbitOff);
       }
       C.update();
       R.render(S, camera);
