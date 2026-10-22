@@ -39,6 +39,14 @@ const LINES = [
 const SLUG = 'autocore';
 const TITLE = 'Hold the Work Line';
 
+// The three fixes are hidden behind a blur. Only filler of a rough shape is in the markup, so
+// the answers can't be read from page source or by a screen reader; they stay in the deck.
+const HIDDEN_ROWS = [
+  { dt: '1 · Nmorse', dd: 'Vaxlu cidp' },
+  { dt: '2 · Arwon', dd: 'Tesh im bnmo' },
+  { dt: '3 · Rsevax', dd: 'Lucidparwon teshim' },
+];
+
 const LIVE_AFTER_MS = 700;
 const MAX_TILT_DEG = 10;
 
@@ -195,32 +203,21 @@ export default function AutoCoreCard() {
                   Losing about <b>a share point a year</b> in Work. Three fixes, in that order:
                 </span>
                 <span className={styles.rows}>
-                  <span className={styles.row}>
-                    <span className={styles.dt}>1 · Product</span>
-                    <svg className={styles.pic} viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M8 3 L3 6 L5 11 L7 10 V21 H17 V10 L19 11 L21 6 L16 3 Q12 6 8 3 Z" />
-                      <path d="M12 6 V21" />
-                    </svg>
-                    <span className={styles.dd}>Crew + Pro</span>
-                  </span>
-                  <span className={styles.row}>
-                    <span className={styles.dt}>2 · Price</span>
-                    <svg className={styles.pic} viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 12 L12 4 H22 V14 L14 22 Z" />
-                      <circle cx="17.5" cy="8.5" r="1.8" />
-                    </svg>
-                    <span className={styles.dd}>Crew at $145</span>
-                  </span>
-                  <span className={styles.row}>
-                    <span className={styles.dt}>3 · Place</span>
-                    <svg className={styles.pic} viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M3 4 V21 M21 4 V21 M3 9 H21 M3 15 H21 M3 21 H21" />
-                      <rect x="6" y="5" width="4" height="4" />
-                      <rect x="12" y="11" width="5" height="4" />
-                      <rect x="7" y="17" width="3" height="4" />
-                    </svg>
-                    <span className={styles.dd}>Safety/Work stores</span>
-                  </span>
+                  {HIDDEN_ROWS.map((r) => (
+                    <span className={styles.row} key={r.dt}>
+                      <span className={`${styles.dt} ${styles.hidden}`} aria-hidden="true">
+                        {r.dt}
+                      </span>
+                      <svg className={styles.lock} viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="5" y="11" width="14" height="10" rx="2" />
+                        <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
+                      </svg>
+                      <span className={`${styles.dd} ${styles.hidden}`} aria-hidden="true">
+                        {r.dd}
+                      </span>
+                    </span>
+                  ))}
+                  <span className={styles.srOnly}>Hidden until the deck is unlocked.</span>
                 </span>
               </span>
               <span className={styles.cta} id="autocore-cta">

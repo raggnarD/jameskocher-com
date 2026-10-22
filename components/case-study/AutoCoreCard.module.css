@@ -248,6 +248,29 @@
   white-space: nowrap;
   color: var(--ink);
 }
+/* Hidden fixes: filler text under a blur, with a clear lock in the icon column. */
+.hidden {
+  filter: blur(4px);
+  user-select: none;
+}
+.lock {
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .cta {
   display: inline-flex;
   align-items: center;
