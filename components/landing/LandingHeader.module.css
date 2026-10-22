@@ -1,0 +1,87 @@
+/* Landing header, option 06 "Split corners + JK" (prototype: mockups/landing/nav-variants.js V[6]).
+   No bar: the photo runs under it. --np (0 intro .. 1 revealed) is written per frame by the hero's
+   scroll engine and fades dark rounded backgrounds in behind each corner. */
+
+.jn {
+  --brand: #ff5e1a;
+  --sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  --display: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --ease: cubic-bezier(.2, .6, .2, 1);
+  --np: 0;
+  position: sticky; top: 0; z-index: 40; height: 56px; color: #fff; background: none; font-family: var(--sans); line-height: 1.55;
+}
+.jn a, .jn button { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.jn button { background: none; border: 0; padding: 0; margin: 0; cursor: pointer; font: inherit; }
+.jn svg { display: block; flex: none; }
+.jn :focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 8px; box-shadow: 0 0 0 5px rgb(0 0 0/.55); }
+:global(html.launching) .jn { opacity: 0; transition: opacity .35s ease; }
+
+.inner { position: relative; z-index: 2; height: 56px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.scrim { position: absolute; left: 0; right: 0; top: 0; pointer-events: none; height: 128px; background: linear-gradient(to bottom, rgb(0 0 0/.5), rgb(0 0 0/.28) 45%, rgb(0 0 0/0)); opacity: calc(1 - var(--np) * .4); }
+
+.chip { position: relative; isolation: isolate; display: flex; align-items: center; height: 44px; border-radius: 999px; }
+.chip::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: rgb(12 11 10/.9); border: 1px solid rgb(255 255 255/.1);
+  opacity: clamp(0, calc((var(--np) - .3) * 2), 1); transform: scale(calc(.92 + clamp(0, calc((var(--np) - .3) * 2), 1) * .08));
+}
+
+/* brand: JK square that rolls and tilts on hover, plus the name with an underline */
+.brand { gap: 12px; padding: 0 16px 0 5px; font-weight: 700; font-size: 13px; letter-spacing: .24em; text-transform: uppercase; text-shadow: 0 1px 8px rgb(0 0 0/.4); }
+.brand::after { content: ""; position: absolute; left: 51px; right: 16px; bottom: 11px; height: 1px; background: var(--brand); transform: scaleX(0); transform-origin: 0 50%; transition: transform .45s var(--ease); }
+.brand:hover::after { transform: scaleX(1); }
+.mk { position: relative; display: block; flex: none; width: 34px; height: 34px; border-radius: 9px; overflow: hidden; background: var(--brand); color: #140a05; text-shadow: none; letter-spacing: 0; transition: transform .5s cubic-bezier(.34, 1.56, .64, 1); }
+.roll { display: block; transition: transform .5s var(--ease); }
+.roll span { display: grid; place-items: center; height: 34px; font: 700 14px/1 var(--sans); letter-spacing: .02em; }
+.roll span + span { background: #fff; color: #140a05; }
+.brand:hover .roll { transform: translate3d(0, -34px, 0); }
+.brand:hover .mk { transform: rotate(-8deg); }
+
+/* right corner: Contact | LinkedIn GitHub */
+.right { padding: 0 4px 0 6px; }
+.link { display: inline-flex; align-items: center; height: 44px; padding: 0 12px; font-weight: 600; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; }
+.sep { width: 1px; height: 16px; background: rgb(255 255 255/.25); margin: 0 2px; }
+.ic { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; }
+.link, .ic { transition: opacity .25s; }
+.right:hover .link, .right:hover .ic { opacity: .6; }
+.right .link:hover, .right .ic:hover { opacity: 1; }
+.ic svg { width: 16px; height: 16px; transition: transform .35s var(--ease); }
+.ic:hover svg { transform: translate3d(0, -2px, 0); }
+
+/* phone menu */
+.menu { display: none; width: 44px; justify-content: center; }
+.menu::before { opacity: 1; transform: none; background: rgb(12 11 10/.55); border-color: rgb(255 255 255/.28); }
+.bars { position: relative; width: 18px; height: 10px; }
+.bars i { position: absolute; left: 0; right: 0; height: 1.5px; border-radius: 2px; background: #fff; transition: transform .45s var(--ease); }
+.bars i:first-child { top: 0; }
+.bars i:last-child { bottom: 0; }
+.open .bars i:first-child { transform: translate3d(0, 4.25px, 0) rotate(45deg); }
+.open .bars i:last-child { transform: translate3d(0, -4.25px, 0) rotate(-45deg); }
+.open .menu::before { background: rgb(255 255 255/.06); }
+.open .brand::before { opacity: 0; }
+
+.ov {
+  position: fixed; inset: 0; z-index: 1; display: flex; flex-direction: column; padding: 88px 16px 28px; background: #0a0908; color: #fff;
+  overscroll-behavior: contain; opacity: 0; visibility: hidden; transition: opacity .4s var(--ease), visibility 0s linear .4s;
+}
+.open .ov { opacity: 1; visibility: visible; transition: opacity .45s var(--ease); }
+.ov ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid rgb(255 255 255/.12); }
+.ov li { border-bottom: 1px solid rgb(255 255 255/.12); opacity: 0; transform: translate3d(0, 28px, 0); transition: opacity .25s, transform .25s; }
+.open .ov li { opacity: 1; transform: none; transition: opacity .5s var(--ease) calc(.08s + var(--i) * .06s), transform .7s cubic-bezier(.16, 1, .3, 1) calc(.08s + var(--i) * .06s); }
+.ov a { display: flex; align-items: center; justify-content: space-between; min-height: 72px; font-family: var(--display); font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -.01em; }
+.ov a:focus-visible { outline-offset: -2px; }
+.arrow { color: var(--brand); }
+.kicker { margin: 0 0 14px; font: 500 11px/1 var(--mono); letter-spacing: .22em; text-transform: uppercase; color: rgb(255 255 255/.6); }
+.foot { margin: auto 0 0; }
+
+@media (min-width: 640px) { .ov { display: none; } }
+@media (max-width: 639px) {
+  .inner { padding: 0 16px; gap: 8px; }
+  .right { display: none; }
+  .menu { display: flex; margin-right: 0; }
+  .brand { gap: 10px; padding-right: 14px; font-size: 12px; letter-spacing: .22em; }
+  .brand::after { left: 49px; right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jn *, .jn *::before, .jn *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
+}

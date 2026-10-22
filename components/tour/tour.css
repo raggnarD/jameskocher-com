@@ -1,0 +1,257 @@
+/*
+ * /tour/ guided flyover ("Recon"). Imported only by components/tour/Tour.tsx.
+ * Every rule is scoped under .recon (the route's root element). State classes
+ * that the prototype put on <body> (touring, focus, tour-paused) live on .recon.
+ */
+html:has(.recon), body:has(.recon) { overflow: hidden; height: 100%; }
+
+.recon {
+  --brand: #ff5e1a;
+  --brand-soft: rgba(255, 94, 26, 0.16);
+  --ink: #f4f2ef;
+  --muted: rgba(244, 242, 239, 0.66);
+  --line: rgba(244, 242, 239, 0.22);
+  --sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+  position: fixed; inset: 0; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 40%, #1b1714 0%, #0b0a09 60%, #060505 100%);
+  color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: normal;
+}
+.recon *, .recon *::before, .recon *::after { box-sizing: border-box; }
+.recon a { color: inherit; }
+.recon #stage { position: fixed; inset: 0; cursor: grab; }
+.recon #stage:active { cursor: grabbing; }
+.recon #stage canvas { display: block; touch-action: none; }
+.recon .overlay { position: fixed; inset: 0; pointer-events: none; }
+.recon .overlay > * { pointer-events: auto; }
+.recon svg.overlay { width: 100%; height: 100%; }
+.recon svg.overlay * { pointer-events: none; }
+
+/* cinematic finish */
+.recon .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,.6) 100%); }
+.recon .grain { position: fixed; inset: -50%; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: recon-grain 1.2s steps(6) infinite; }
+@keyframes recon-grain { 0%{transform:translate(0,0)} 33%{transform:translate(-3%,2%)} 66%{transform:translate(2%,-3%)} 100%{transform:translate(0,0)} }
+
+.recon .topbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 20; pointer-events: none; }
+.recon .topbar > * { pointer-events: auto; }
+.recon .brand { font-weight: 700; font-size: 20px; letter-spacing: -.01em; text-decoration: none; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+.recon .brand span { color: var(--brand); }
+.recon .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+
+/* hero photo, dissolves into the terrain */
+.recon .photo { position: fixed; inset: 0; z-index: 30; overflow: hidden; background: #000; transition: opacity 1.4s ease, filter 1.4s ease; }
+.recon .photo img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center 55%; transition: transform 2.4s cubic-bezier(.2,.7,.2,1); }
+.recon .photo img.pending { visibility: hidden; } /* until the hand-off rect (if any) is applied */
+.recon .photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 40%, rgba(0,0,0,.6)); }
+.recon .photo.handoff::after { display: none; } /* landing page handed over its exact frame; don't restyle it */
+.recon .photo.out { opacity: 0; filter: blur(6px); pointer-events: none; }
+.recon .photo.out img { transform: scale(1.08); }
+/* only shows if loading is genuinely slow */
+.recon .loadline { position: absolute; left: 0; bottom: 0; z-index: 2; height: 2px; width: 0; background: var(--brand); opacity: 0; transition: width .3s, opacity .3s; }
+.recon .photo.slow .loadline { opacity: 1; }
+
+.recon #lead line { stroke: rgba(255,255,255,.5); stroke-width: 1; }
+.recon #lead line.hot { stroke: var(--brand); }
+.recon #lead circle { fill: var(--brand); }
+
+.recon .pin { position: absolute; left: 0; top: 0; background: none; border: 0; color: #fff; font: inherit; cursor: pointer; padding: 0; text-align: left; will-change: transform; transition: opacity .3s; z-index: 2; }
+.recon .pin.on, .recon .pin:hover, .recon .pin:focus-visible { z-index: 3; }
+.recon .pin .box { display: flex; align-items: center; gap: 10px; padding: 7px 12px 7px 8px; background: #0d0c0b; border: 1px solid rgba(255,255,255,.28); position: relative; transition: background .2s, border-color .2s; }
+.recon .pin .box::before, .recon .pin .box::after { content: ''; position: absolute; width: 8px; height: 8px; border: 2px solid var(--brand); }
+.recon .pin .box::before { left: -3px; top: -3px; border-right: 0; border-bottom: 0; }
+.recon .pin .box::after { right: -3px; bottom: -3px; border-left: 0; border-top: 0; }
+.recon .pin .k { font: 700 12px var(--mono); width: 22px; height: 22px; display: grid; place-items: center; background: var(--brand); color: #111; }
+.recon .pin b { display: block; font-size: 15px; line-height: 1.1; font-weight: 700; }
+.recon .pin small { display: block; font: 10px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.recon .pin:hover .box, .recon .pin.on .box { background: #ff5e1a; border-color: #fff; }
+.recon .pin:hover small, .recon .pin.on small { color: #1a0d05; }
+.recon .pin:hover .k, .recon .pin.on .k { background: #111; color: #fff; }
+.recon .pin:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
+.recon .feat { position: absolute; left: 0; top: 0; font: 10px var(--mono); letter-spacing: .16em; color: rgba(255,255,255,.55); text-transform: uppercase; pointer-events: none; white-space: nowrap; text-shadow: 0 1px 3px #000; z-index: 1; }
+.recon .feat::before { content: '▲ '; color: rgba(255,255,255,.4); }
+
+.recon .hud { position: fixed; left: 24px; top: 72px; font: 11px var(--mono); letter-spacing: .14em; color: rgba(255,255,255,.75); line-height: 1.9; pointer-events: none; text-transform: uppercase; }
+.recon .hud b { color: var(--brand); font-weight: 500; }
+.recon .hero { position: fixed; left: 24px; bottom: 28px; max-width: 560px; pointer-events: none; transition: opacity .4s; }
+.recon .hero h1 { font-size: clamp(26px, 3.2vw, 44px); font-weight: 700; line-height: 1.08; letter-spacing: -.015em; margin: 8px 0; text-shadow: 0 2px 14px #000; }
+.recon .hero p { margin: 0; color: rgba(255,255,255,.82); }
+.recon.focus .hero { opacity: 0; }
+
+.recon .compass { position: fixed; right: 24px; bottom: 24px; width: 74px; height: 74px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.35); backdrop-filter: blur(6px); }
+.recon .compass svg { width: 60px; height: 60px; }
+.recon .compass text { font: 700 9px var(--mono); fill: #fff; }
+.recon .hint { position: fixed; right: 110px; bottom: 40px; font: 10px var(--mono); letter-spacing: .2em; color: var(--muted); text-transform: uppercase; text-align: right; line-height: 1.8; }
+
+.recon .panel { position: fixed; right: 24px; top: 50%; width: min(380px, 90vw); transform: translate(30px, -50%); opacity: 0; pointer-events: none; transition: opacity .4s, transform .5s cubic-bezier(.2,.8,.2,1); background: rgba(10,9,8,.8); backdrop-filter: blur(14px); border: 1px solid var(--line); border-top: 3px solid var(--brand); --pt: 20px; --px: 22px; padding: var(--pt) var(--px) 14px; z-index: 10; max-height: calc(100vh - 200px); overflow: auto; }
+.recon .panel.show { opacity: 1; transform: translate(0, -50%); pointer-events: auto; }
+.recon .panel h2 { margin: 6px 0 2px; font-size: 32px; font-weight: 700; line-height: 1.2; }
+.recon .panel .where { font: 11px var(--mono); letter-spacing: .14em; color: var(--brand); text-transform: uppercase; }
+.recon .panel p { color: var(--muted); margin: 10px 0 14px; }
+.recon .panel .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 14px; }
+.recon .panel .stats div { background: rgba(10,9,8,.95); padding: 8px; font: 10px var(--mono); letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+.recon .panel .stats b { display: block; color: #fff; font-size: 14px; letter-spacing: .02em; margin-top: 2px; }
+.recon .panel ul { list-style: none; margin: 0; padding: 0; }
+.recon .panel li a { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 10px 6px; border-bottom: 1px solid var(--line); text-decoration: none; transition: background .2s; }
+.recon .panel li a:hover, .recon .panel li a:focus-visible { background: rgba(255,94,26,.14); outline: none; }
+.recon .panel li a i { font: 10px var(--mono); font-style: normal; color: var(--muted); }
+.recon .panel li a b { font-size: 16px; display: block; }
+.recon .panel li a small { color: var(--muted); font-size: 13px; }
+.recon .panel li a span.go { font: 11px var(--mono); color: var(--brand); letter-spacing: .1em; }
+.recon .panel .row { display: flex; justify-content: space-between; margin-top: 12px; }
+.recon .hudbtn { font: 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #fff; background: rgba(255,255,255,.05); border: 1px solid var(--line); padding: 8px 12px; cursor: pointer; }
+.recon .hudbtn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* ---------- guided tour */
+.recon .hero .tourgo { pointer-events: auto; margin-top: 14px; }
+.recon.focus .hero .tourgo { pointer-events: none; }
+.recon .home-pill { display: none; font: 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; text-decoration: none; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.35); backdrop-filter: blur(6px); color: #fff; }
+.recon .home-pill:hover, .recon .home-pill:focus-visible { border-color: var(--brand); color: var(--brand); outline: none; }
+.recon.touring .home-pill { display: inline-block; }
+.recon.touring .hero, .recon.touring .hint { opacity: 0; pointer-events: none; }
+.recon.touring .hero .tourgo { pointer-events: none; }
+.recon.touring .panel .row { display: none; }
+/* countdown: sits on the panel's top edge in place of the orange border, shrinks over the dwell */
+.recon .p-count { display: none; }
+.recon.touring .panel { border-top-width: 0; }
+.recon.touring .p-count { display: block; position: sticky; top: calc(-1 * var(--pt, 20px)); z-index: 1; height: 3px; margin: calc(-1 * var(--pt, 20px)) calc(-1 * var(--px, 22px)) calc(var(--pt, 20px) - 3px); background: rgba(255,94,26,.22); }
+.recon .p-count i { display: block; height: 100%; width: 100%; background: var(--brand); transform-origin: 0 50%; }
+.recon.tour-paused .p-count i { opacity: .55; }
+
+.recon .tour { position: fixed; left: 24px; bottom: max(24px, calc(16px + env(safe-area-inset-bottom))); width: min(520px, calc(100vw - 48px)); z-index: 12; background: rgba(10,9,8,.84); backdrop-filter: blur(14px); border: 1px solid var(--line); border-left: 3px solid var(--brand); padding: 16px 18px; display: grid; --safe-b: calc(16px + env(safe-area-inset-bottom)); max-height: calc(100vh - 72px - var(--safe-b)); max-height: calc(100dvh - 72px - var(--safe-b)); overflow: auto; grid-template-columns: 1fr auto; grid-template-areas: "step exit" "cap cap" "seg seg" "ctl ctl"; gap: 10px 12px; align-items: center; }
+.recon .tour[hidden] { display: none; }
+.recon .t-step { grid-area: step; font: 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recon .t-step b { color: var(--brand); font-weight: 500; margin-right: 10px; }
+.recon .t-cap { grid-area: cap; margin: 0; font-size: 17px; line-height: 1.35; color: var(--ink); min-height: 2.7em; }
+.recon .t-seg { grid-area: seg; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.recon .t-seg i { display: block; height: 3px; background: rgba(255,255,255,.18); overflow: hidden; }
+.recon .t-seg i b { display: block; height: 100%; width: 0; background: var(--brand); }
+.recon .t-ctl, .recon .t-end { grid-area: ctl; display: flex; gap: 8px; flex-wrap: wrap; }
+.recon .t-end { display: none; }
+.recon .tour.end .t-ctl { display: none; }
+.recon .tour.end .t-end { display: flex; }
+.recon .tour .hudbtn { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.recon .tour .hudbtn:disabled { opacity: .35; cursor: default; border-color: var(--line); color: #fff; }
+.recon .tour .hudbtn.pri { background: var(--brand); border-color: var(--brand); color: #111; font-weight: 700; }
+.recon .tour .hudbtn.pri:hover { background: #ff7a42; color: #111; }
+.recon .tour .hudbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.recon #tExit { grid-area: exit; }
+.recon .tour.paused .t-seg i.cur b { opacity: .55; }
+@media (min-width: 761px) { .recon .tour { width: min(520px, calc(100vw - 48px - 380px - 32px)); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .recon .photo { transition: opacity .4s ease; }
+  .recon .photo.out { filter: none; }
+  .recon .photo img, .recon .photo.out img { transition: none; transform: none; }
+  .recon .panel, .recon .panel.show { transition: opacity .2s; }
+  .recon .grain { animation: none; }
+}
+
+@media (max-width: 760px) {
+  .recon .tour { left: 12px; right: 12px; top: 60px; bottom: auto; width: auto; padding: 12px; max-height: calc(100vh - 60px - var(--safe-b)); max-height: calc(100dvh - 60px - var(--safe-b)); gap: 8px 10px; grid-template-columns: auto 1fr auto; grid-template-areas: "ctl step exit" "cap cap cap" "seg seg seg"; }
+  .recon .t-cap { font-size: 14px; min-height: 0; }
+  .recon .t-step { font-size: 10px; letter-spacing: .1em; }
+  .recon .t-step b { display: block; margin: 0; }
+  .recon .t-ctl, .recon .t-end { gap: 6px; flex-wrap: nowrap; }
+  .recon .tour .t-ctl .hudbtn { padding: 0; width: 40px; justify-content: center; }
+  .recon .tour .t-ctl .hudbtn span { display: none; }
+  .recon .tour .hudbtn { padding: 6px 10px; font-size: 10px; letter-spacing: .1em; }
+  .recon .tour .wide { display: none; }
+  .recon .tour.end { grid-template-areas: "step exit" "cap cap" "seg seg" "ctl ctl"; grid-template-columns: 1fr auto; }
+  .recon.touring .hud, .recon.touring .compass { display: none; }
+  .recon.touring .panel { max-height: 40vh; --pt: 14px; --px: 16px; padding: var(--pt) var(--px) 8px; }
+  .recon.touring .panel h2 { font-size: 24px; }
+  .recon.touring .panel .stats, .recon.touring .panel p { display: none; }
+  .recon.touring .panel li a { padding: 8px 4px; }
+}
+
+@media (max-width: 760px) {
+  .recon .hud { top: 62px; left: 16px; right: 84px; font-size: 9px; letter-spacing: .1em; line-height: 1.7; }
+  .recon .hud .cur { display: none; }
+  .recon .hero { left: 16px; right: 16px; bottom: 20px; }
+  .recon .hero p { display: none; }
+  .recon .hint { display: none; }
+  .recon .compass { width: 56px; height: 56px; right: 16px; bottom: auto; top: 64px; }
+  .recon .compass svg { width: 46px; height: 46px; }
+  .recon .panel { left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; transform: translateY(30px); max-height: 55vh; }
+  .recon .panel.show { transform: none; }
+  .recon .pin b { font-size: 13px; }
+  .recon .pin small { display: none; }
+}
+@media (max-width: 640px) {
+  .recon .brand { font-size: 17px; }
+}
+
+/* ---------- polish pass (ui-polish round 1) */
+/* hidden things leave the tab order */
+.recon .panel { visibility: hidden; transition: opacity .4s, transform .5s cubic-bezier(.2,.8,.2,1), visibility 0s .4s; }
+.recon .panel.show { visibility: visible; transition-delay: 0s; }
+.recon.touring .hero, .recon.focus .hero { visibility: hidden; }
+/* focus rings everywhere, not only in the tour card */
+.recon .hudbtn:focus-visible, .recon .topbar a:focus-visible, .recon .home-pill:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* stop name readable instead of ellipsized */
+.recon .t-step { white-space: normal; }
+.recon .t-step b { display: block; margin: 0 0 2px; }
+/* bigger targets and 11px floor on small mono text */
+.recon .home-pill { padding: 9px 12px; }
+.recon #tourGo { min-height: 40px; }
+.recon .pin small, .recon .feat, .recon .panel .stats div, .recon .panel li a i, .recon .hint { font-size: 11px; letter-spacing: .1em; }
+.recon .panel li a span.go { font-size: 12px; }
+/* list continues: fade the bottom edge while more links are below */
+.recon .panel.more { -webkit-mask-image: linear-gradient(#000 calc(100% - 36px), transparent); mask-image: linear-gradient(#000 calc(100% - 36px), transparent); }
+/* safe areas (insets are 0 on desktop) */
+.recon .topbar { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+.recon .hud, .recon .hero { left: max(24px, env(safe-area-inset-left)); }
+.recon .tour { left: max(24px, env(safe-area-inset-left)); }
+.recon .panel { right: max(24px, env(safe-area-inset-right)); }
+.recon .compass { right: max(24px, env(safe-area-inset-right)); bottom: max(24px, calc(12px + env(safe-area-inset-bottom))); }
+.recon .pin, .recon .hudbtn, .recon .home-pill { -webkit-tap-highlight-color: transparent; user-select: none; }
+
+@media (min-width: 761px) and (min-height: 501px) { .recon .panel { max-height: calc(100vh - 128px); } }
+@media (min-width: 761px) and (max-height: 760px) and (min-height: 501px) {
+  .recon.touring .panel p { display: none; }
+  .recon .panel h2 { font-size: 26px; }
+  .recon .panel li a { padding: 7px 6px; }
+}
+@media (max-width: 760px) {
+  .recon .topbar { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .recon .hud, .recon .hero { left: max(16px, env(safe-area-inset-left)); }
+  .recon .tour { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); }
+  .recon .panel { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .recon .compass { right: max(16px, env(safe-area-inset-right)); bottom: auto; }
+  .recon .home-pill { padding: 7px 9px; }
+}
+/* landscape phones: wide but short. Tour card and panel sit side by side. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .recon .hud, .recon .hint, .recon.focus .compass { display: none; }
+  .recon .compass { width: 48px; height: 48px; }
+  .recon .compass svg { width: 40px; height: 40px; }
+  .recon .tour { top: 60px; bottom: auto; width: min(360px, 44vw); padding: 10px 12px; gap: 8px 10px; grid-template-columns: auto 1fr auto; grid-template-areas: "ctl step exit" "cap cap cap" "seg seg seg"; max-height: calc(100vh - 60px - var(--safe-b)); max-height: calc(100dvh - 60px - var(--safe-b)); }
+  .recon .tour.end { grid-template-areas: "step exit" "cap cap" "seg seg" "ctl ctl"; grid-template-columns: 1fr auto; }
+  .recon .t-cap { font-size: 14px; min-height: 0; }
+  .recon .t-step { font-size: 10px; letter-spacing: .1em; }
+  .recon .t-ctl, .recon .t-end { gap: 6px; flex-wrap: nowrap; }
+  .recon .tour .t-ctl .hudbtn { padding: 0; width: 40px; justify-content: center; }
+  .recon .tour .t-ctl .hudbtn span, .recon .tour .wide { display: none; }
+  .recon .tour .hudbtn { padding: 6px 10px; font-size: 10px; letter-spacing: .1em; }
+  .recon .panel { top: 60px; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(30px); max-height: none; width: min(340px, 44vw); --pt: 14px; --px: 16px; padding: var(--pt) var(--px) 8px; }
+  .recon .panel.show { transform: none; }
+  .recon .panel p, .recon .panel .stats { display: none; }
+  .recon .panel h2 { font-size: 22px; }
+  .recon .panel li a { padding: 7px 4px; }
+  .recon .hero h1 { font-size: 24px; }
+  .recon .hero p { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .recon .panel { transition: opacity .2s, visibility 0s .2s; } .recon .panel.show { transition-delay: 0s; } }
+/* touch: 44px targets, and no backdrop blur over the always-redrawing canvas */
+@media (pointer: coarse) {
+  .recon .home-pill { min-height: 44px; display: none; align-items: center; }
+  .recon.touring .home-pill { display: inline-flex; }
+  .recon .tour .hudbtn, .recon #tourGo { min-height: 44px; }
+  .recon .tour .t-ctl .hudbtn { width: 44px; }
+  .recon .pin .box { min-height: 44px; }
+  .recon .panel, .recon .tour, .recon .compass, .recon .home-pill { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .recon .panel, .recon .tour { background: rgba(10,9,8,.94); }
+}

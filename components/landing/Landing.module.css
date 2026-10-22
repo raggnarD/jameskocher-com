@@ -1,0 +1,148 @@
+/* Landing hero: the scrubbed scroll reveal (prototype mockups/landing/intro-b1.html, buttons option 13).
+   Real document scroll drives a pinned stage. Motion is transform/opacity only; the engine in Hero.tsx
+   writes per-frame values inline. Defaults below are the p = 0 (intro) state, so the server render and
+   the first paint before hydration already look right. */
+
+.track {
+  --brand: #ff5e1a;
+  --sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  --display: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --ease: cubic-bezier(.2, .6, .2, 1);
+  --S: calc(100svh - 56px);
+  --bh: calc(var(--S) * .56);
+  --fade: 160px;
+  position: relative;
+  height: calc(var(--S) * 1.9);
+  background: #000;
+  color: rgb(220 218 215);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: clip;
+  color-scheme: dark;
+}
+.track a { color: inherit; text-decoration: none; }
+.track button { font: inherit; color: inherit; }
+.track :focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 2px; }
+
+.hero { position: sticky; top: 56px; height: var(--S); color: #fff; isolation: isolate; }
+
+/* The photo runs 56px up under the transparent header; the plate stays put so the motion math is unchanged. */
+.photo { position: absolute; inset: 0; top: -56px; overflow: hidden; overflow: clip; background: #000; z-index: 0; transform-origin: 50% 45%; }
+/* ONE rigid plate: photo, tint and black blend move together by a single translate.
+   No scale, no masks, no blur while moving; the image is sized once per resize at whole-pixel cover. */
+.plate { position: absolute; left: 0; top: 56px; width: 100%; height: 100%; backface-visibility: hidden; }
+.moving .plate { will-change: transform; }
+/* Pre-hydration fallback is a plain cover; the engine replaces it with exact whole-pixel geometry. */
+.ph {
+  position: absolute; left: 0; top: -56px; width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 55%;
+  max-width: none; display: block; user-select: none; -webkit-user-drag: none;
+}
+.grad {
+  position: absolute; left: 0; right: 0; top: 0; height: calc(var(--S) * 2);
+  background: linear-gradient(to bottom, rgb(0 0 0/.45) 0, rgb(0 0 0/.55) 25%, rgb(0 0 0/.8) 50%, rgb(0 0 0/.8));
+}
+.grad::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 240px; background: rgb(0 0 0/.45); }
+/* the blend is pinned to the photo (it never slides across it); only its opacity changes */
+.blend {
+  position: absolute; left: 0; right: 0; top: var(--blendtop, 100%); height: calc(var(--S) * 2); opacity: 0;
+  background: linear-gradient(to bottom, rgb(0 0 0/0) 0, rgb(0 0 0/.55) calc(var(--fade) * .45), rgb(0 0 0/.9) calc(var(--fade) * .8), #000 var(--fade));
+}
+
+/* ---- copy ---- */
+.wrap { position: absolute; left: 0; right: 0; top: 0; z-index: 2; max-width: 72rem; margin: 0 auto; padding: 40px 24px; }
+.tag { font-family: var(--display); font-weight: 500; font-size: 30px; line-height: 1.1; letter-spacing: -.025em; max-width: 64rem; margin: 0; text-shadow: 0 2px 12px rgb(0 0 0/.6); }
+.intro { margin: 32px 0 0; font-size: 16px; line-height: 24px; color: #fff; max-width: 48rem; text-shadow: 0 1px 4px rgb(0 0 0/.7); }
+
+/* ---- revealed section links ---- */
+.deck { position: absolute; left: 0; right: 0; top: calc(var(--bh) - var(--fade) * .25); z-index: 3; }
+.deck[inert] { pointer-events: none; }
+.deckIn { max-width: 72rem; margin: 0 auto; padding: 12px 24px 96px; display: grid; gap: 14px; }
+.sec { opacity: 0; transform: translate3d(0, 48px, 0); }
+.sec h2 { font-weight: 600; font-size: 20px; line-height: 28px; color: #fff; margin: 0 0 4px; }
+.links { display: flex; flex-wrap: wrap; column-gap: 32px; }
+.lk { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; line-height: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: .22em; color: var(--brand); transition: color .15s; }
+.track .lk { color: var(--brand); }
+.track .lk:hover { color: #fff; }
+
+/* ---- headshot + pull back ---- */
+.shotRow { position: absolute; right: 24px; bottom: 24px; z-index: 4; display: flex; align-items: center; gap: 16px; }
+.shot { display: block; width: 40px; height: 40px; object-fit: cover; border-radius: 2px; border: 2px solid rgb(255 255 255/.8); box-shadow: 0 10px 15px -3px rgb(0 0 0/.1), 0 4px 6px -4px rgb(0 0 0/.1); }
+.back {
+  min-height: 44px; padding: 0 16px 0 12px; display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; cursor: pointer;
+  background: rgb(0 0 0/.3); border: 1px solid rgb(255 255 255/.25); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font: 600 12px/1 var(--sans); letter-spacing: .22em; text-transform: uppercase; color: rgb(255 255 255/.85); transition: border-color .15s;
+  opacity: 0; visibility: hidden;
+}
+.track .back { color: rgb(255 255 255/.85); font: 600 12px/1 var(--sans); }
+.track .back:hover { border-color: rgb(255 255 255/.6); color: #fff; }
+.back kbd { font: 500 10px/1 var(--mono); letter-spacing: .05em; padding: 4px 6px; border-radius: 999px; background: rgb(255 255 255/.12); color: rgb(255 255 255/.7); }
+@media (hover: none) { .back kbd { display: none; } }
+
+@media (min-width: 640px) {
+  .tag { font-size: 48px; }
+  .intro { font-size: 18px; line-height: 28px; }
+  .sec h2 { font-size: 24px; line-height: 32px; }
+  .links { column-gap: 40px; }
+  .shot { width: 48px; height: 48px; }
+  .wrap { padding: 56px 40px; }
+  .deckIn { padding: 16px 40px 96px; }
+  .shotRow { right: 40px; bottom: 32px; }
+}
+@media (min-width: 768px) {
+  .tag { font-size: 60px; }
+  .deckIn { grid-template-columns: 1fr 1.7fr 1fr; gap: 40px; }
+}
+
+/* ---- "Two ways in": minimal pair pinned bottom-left (option 13 "Alive"). Exit reads --p. ---- */
+.mini {
+  --p: 0;
+  position: absolute; z-index: 3; left: max(24px, calc((100% - 72rem) / 2 + 24px)); bottom: 28px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px;
+  transform: translate3d(0, calc(var(--p) * 28px), 0); opacity: calc(1 - var(--p) * 4);
+}
+.k { font: 500 10px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgb(255 255 255/.5); width: 100%; margin-bottom: 4px; }
+.track .mini a, .track .mini button {
+  min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px 0 0; background: none; border: 0; cursor: pointer;
+  font: 700 12px/1 var(--sans); letter-spacing: .22em; text-transform: uppercase; text-shadow: 0 1px 3px rgb(0 0 0/.7); transition: color .2s;
+}
+.lbl { white-space: nowrap; }
+.sep { width: 1px; height: 14px; background: rgb(255 255 255/.3); margin: 0 8px 0 2px; }
+.track .mini a { color: var(--brand); }
+.track .mini a:hover { color: #fff; }
+.track .mini button { color: #fff; }
+.track .mini button:hover { color: var(--brand); }
+.mini :active .lbl { opacity: .7; }
+@media (min-width: 640px) { .mini { left: max(40px, calc((100% - 72rem) / 2 + 40px)); bottom: 60px; } }
+@media (max-width: 639px) { .mini { bottom: 56px; right: 80px; } .sep { display: none; } }
+
+/* terrain render: ridges light up far to near on a slow loop */
+.alive { display: block; overflow: visible; flex: none; width: 46px; height: 28px; margin-right: 2px; }
+.ridge {
+  fill: none; stroke: var(--brand); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round;
+  animation: breathe 4.8s ease-in-out infinite; animation-delay: calc(var(--i) * -.32s);
+}
+@keyframes breathe { 0%, 100% { stroke-opacity: .35; } 45% { stroke-opacity: 1; } }
+/* scroll-wheel glyph */
+.mouse { flex: none; position: relative; width: 15px; height: 24px; border-radius: 8px; border: 1.5px solid currentColor; opacity: .85; }
+.mouse::after {
+  content: ""; position: absolute; left: 50%; top: 5px; width: 3px; height: 5px; margin-left: -1.5px; border-radius: 2px; background: var(--brand);
+  animation: wheel 2.4s cubic-bezier(.65, 0, .35, 1) infinite;
+}
+@keyframes wheel { 0% { transform: translateY(0); opacity: 0; } 25% { opacity: 1; } 75% { transform: translateY(8px); opacity: 0; } 100% { opacity: 0; } }
+/* both loops pause while the page is moving */
+.moving .mini *, .moving .mini *::before, .moving .mini *::after { animation-play-state: paused !important; }
+
+/* ---- guided-tour hand-off: a gentle push-in while the UI and tint fade, so the last frame is the raw photo.
+   The tour redraws that photo at the exact rect stored by writeTourHandoff(). ---- */
+.fade { position: absolute; inset: 0; top: -56px; z-index: 20; background: #000; opacity: 0; pointer-events: none; }
+.launch .photo { overflow: visible; transform: scale(1.06); transition: transform .75s cubic-bezier(.33, 0, .15, 1); } /* unclipped: the tour draws the whole image */
+.launch .grad, .launch .blend { opacity: 0 !important; transition: opacity .6s ease; } /* raw photo, even if launched mid-reveal */
+.launch .wrap, .launch .mini, .launch .shotRow, .launch .deck { opacity: 0 !important; transition: opacity .3s ease; }
+.launch, .launch * { cursor: progress; }
+
+@media (prefers-reduced-motion: reduce) {
+  .track *, .track *::before, .track *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
+}

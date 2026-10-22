@@ -1,10 +1,10 @@
-import Nav from '@/components/Nav';
+import LandingHeader from '@/components/landing/LandingHeader';
 import Hero from '@/components/Hero';
 
 export default function Page() {
   return (
     <>
-      <Nav />
+      <LandingHeader />
       <main>
         <Hero />
       </main>
