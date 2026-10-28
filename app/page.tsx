@@ -1,5 +1,6 @@
 import LandingHeader from '@/components/landing/LandingHeader';
 import Hero from '@/components/Hero';
+import AnnouncementModal from '@/components/landing/AnnouncementModal';
 
 export default function Page() {
   return (
@@ -8,6 +9,7 @@ export default function Page() {
       <main>
         <Hero />
       </main>
+      <AnnouncementModal />
     </>
   );
 }

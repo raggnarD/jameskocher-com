@@ -157,9 +157,16 @@ export const timeline: TimelineEntry[] = [
       'Led 0→1 launch of Virtual Security Guard, Ring’s flagship subscription monitoring service. The full-stack product spans CV-based event detection, real-time human-in-the-loop verification, and a guided onboarding workflow. Improved onboarding completion from 62.9% to 91.2% and cut P50/P90 onboarding time by 43.6% / 84.9%.',
       'Designed the Standard Operating Procedure (SOP) governing human-operator response after CV-detected person-in-frame events. The SOP specifies decision rules, escalation paths, and verification steps that translate digital signals into trustworthy, real-time, real-world security response.',
       'Drove Alexa/Ring Routine integration across multiple orgs, building cross-functional alignment up to the C-suite (Ring CEO/CTO and Amazon VP of Devices); doubled feature engagement vs. baseline Alexa Routines.',
+      'Lead Mobile App Product Manager for the new Alexa Home Map app (announced Oct 2026), an interactive 3D view of the home and property that places Alexa and Ring devices on a live map and animates Ring camera events around the house.',
       'Set vision across multiple scrum teams; ran Monthly Product and Business Reviews at the Director level, translating telemetry, funnel, and reliability data into prioritized roadmap decisions.',
     ],
     media: [
+      {
+        kind: 'image',
+        src: '/assets/highlights/alexa-home-map.jpg',
+        alt: 'Alexa Home Map on three phones: 3D home map, device remote, and camera timeline',
+        caption: 'Alexa Home Map',
+      },
       {
         kind: 'image',
         src: '/assets/experience/ring-app.png',

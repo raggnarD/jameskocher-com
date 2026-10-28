@@ -1,7 +1,8 @@
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
-import { apps, highlights } from '@/content/my-work';
+import LaunchModalButton from '@/components/LaunchModalButton';
+import { apps, comingSoon, highlights } from '@/content/my-work';
 import { asset } from '@/lib/asset';
 
 export const metadata = {
@@ -24,6 +25,53 @@ export default function MyWorkPage() {
               | Ring, Teltech, and Locus Energy.
             </p>
           </Reveal>
+        </section>
+
+        <section className="section pt-4 sm:pt-6">
+          <div className="mb-8">
+            <p className="eyebrow mb-3">On the way</p>
+            <h2 className="h-section">Coming soon</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {comingSoon.map((c, i) => (
+              <Reveal
+                as="article"
+                key={c.name}
+                delay={i * 60}
+                className="group relative overflow-hidden rounded-2xl border border-dashed border-ink-200 bg-surface"
+              >
+                <div className="aspect-[2/1] w-full overflow-hidden bg-white">
+                  <img
+                    src={asset(c.image)}
+                    alt={`${c.name} preview`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <span className="mb-3 inline-block rounded-full bg-accent px-3 py-1 text-xs font-medium uppercase tracking-wide text-white">
+                    Coming soon
+                  </span>
+                  <h3 className="font-serif text-xl text-ink-900 tracking-tight mb-2">
+                    {c.name}
+                  </h3>
+                  <p className="text-[15px] leading-relaxed text-ink-700 mb-3">
+                    {c.blurb}
+                  </p>
+                  <p className="text-sm text-ink-600 italic mb-4">{c.eta}</p>
+                  {c.link && (
+                    <a
+                      href={c.link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-accent hover:underline"
+                    >
+                      {c.link.label} →
+                    </a>
+                  )}
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </section>
 
         <section className="section pt-4 sm:pt-6">
@@ -108,14 +156,22 @@ export default function MyWorkPage() {
                   <p className="text-sm text-ink-600 italic mb-4">
                     Scope: {h.scope}
                   </p>
-                  <a
-                    href={h.link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-accent hover:underline"
-                  >
-                    {h.link.label} →
-                  </a>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                    {h.launch && (
+                      <LaunchModalButton
+                        launch={h.launch}
+                        className="text-sm text-accent hover:underline"
+                      />
+                    )}
+                    <a
+                      href={h.link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-accent hover:underline"
+                    >
+                      {h.link.label} →
+                    </a>
+                  </div>
                 </div>
               </Reveal>
             ))}

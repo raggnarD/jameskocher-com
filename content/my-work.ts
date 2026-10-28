@@ -1,3 +1,5 @@
+import { homeMap, type Launch } from '@/content/launches';
+
 export type App = {
   name: string;
   blurb: string;
@@ -77,9 +79,45 @@ export type Highlight = {
   scope: string;
   image: string;
   link: { label: string; href: string };
+  /** Adds a "Learn more" button that opens this launch's coverage modal. */
+  launch?: Launch;
 };
 
+export type ComingSoon = {
+  name: string;
+  blurb: string;
+  eta: string;
+  image: string;
+  link?: { label: string; href: string };
+};
+
+export const comingSoon: ComingSoon[] = [
+  {
+    name: 'Alexa Home Map',
+    blurb:
+      'An interactive 3D map of your home and property, with every connected device where it actually sits. Control lights, speakers and cameras right from the map.',
+    eta: 'Preview later in 2026 on iOS, the Alexa and Ring apps, and larger Echo Show devices.',
+    image: '/assets/highlights/alexa-home-map.jpg',
+    link: {
+      label: 'Read the announcement',
+      href: 'https://www.aboutamazon.com/news/devices/alexa-home-map-3d-smart-home-view',
+    },
+  },
+];
+
 export const highlights: Highlight[] = [
+  {
+    name: 'Alexa Home Map',
+    blurb:
+      'A living 3D view of your smart home, inside and out. Devices show their real state on the map, and Ring cameras animate the people and cars around your property.',
+    scope: 'Lead Mobile App Product Manager for the new app.',
+    image: '/assets/highlights/alexa-home-map.jpg',
+    link: {
+      label: 'LinkedIn post',
+      href: 'https://www.linkedin.com/posts/jameswkocher_amazing-to-see-my-teams-hard-work-on-alexa-ugcPost-7521200909251563520-kB1e/',
+    },
+    launch: homeMap,
+  },
   {
     name: 'Ring <> Alexa Routines',
     blurb:
@@ -87,8 +125,8 @@ export const highlights: Highlight[] = [
     scope: 'Lead Product Manager from ideation to execution.',
     image: '/assets/highlights/alexa-routines.svg',
     link: {
-      label: 'Ring App',
-      href: 'https://apps.apple.com/us/app/ring-always-home/id926252661',
+      label: 'LinkedIn post',
+      href: 'https://www.linkedin.com/feed/update/urn:li:activity:7110396080403427328/',
     },
   },
   {

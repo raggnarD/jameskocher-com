@@ -1,3 +1,5 @@
+import { homeMap, type Launch } from '@/content/launches';
+
 // Sections shared by the landing page (link list revealed on scroll) and the
 // /tour/ guided flyover (one objective per section). Internal hrefs are site
 // paths; wrap them with asset() when rendering a raw <a>.
@@ -59,3 +61,7 @@ export const sections: Section[] = [
 
 // The landing page's revealed link list shows these; Contact lives in the header.
 export const landingSections = sections.filter((s) => s.id !== 'contact');
+
+// Launch shown in a modal on every load of the landing page (same interface
+// as its Notable launches "Learn more" on /my-work). Set to null to turn off.
+export const announcement: Launch | null = homeMap;
