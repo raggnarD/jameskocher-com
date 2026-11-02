@@ -1,5 +1,12 @@
 import Reveal from '@/components/Reveal';
-import type { AIProject } from '@/content/experience';
+import type { AIProject, BadgeStyle } from '@/content/experience';
+
+const BADGE_STYLES: Record<BadgeStyle, string> = {
+  accent: 'bg-accent-soft text-accent',
+  neutral: 'bg-ink-50 text-ink-700',
+  blue: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
+  red: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
+};
 
 export default function ProjectsSection({
   projects,
@@ -21,11 +28,7 @@ export default function ProjectsSection({
             </h3>
             {p.badge && (
               <span
-                className={
-                  p.badge.style === 'accent'
-                    ? 'shrink-0 rounded-full bg-accent-soft text-accent text-xs px-2.5 py-0.5 font-medium uppercase tracking-wider'
-                    : 'shrink-0 rounded-full bg-ink-50 text-ink-700 text-xs px-2.5 py-0.5 font-medium uppercase tracking-wider'
-                }
+                className={`shrink-0 rounded-full text-xs px-2.5 py-0.5 font-medium uppercase tracking-wider ${BADGE_STYLES[p.badge.style]}`}
               >
                 {p.badge.text}
               </span>

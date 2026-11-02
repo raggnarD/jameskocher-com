@@ -65,10 +65,12 @@ export type EducationBreak = {
 
 export type TimelineEntry = Job | EducationBreak;
 
+export type BadgeStyle = 'accent' | 'neutral' | 'blue' | 'red';
+
 export type AIProject = {
   id: string;
   title: string;
-  badge?: { text: string; style: 'accent' | 'neutral' };
+  badge?: { text: string; style: BadgeStyle };
   body: string;
 };
 
@@ -371,8 +373,8 @@ export const timeline: TimelineEntry[] = [
 export const aiProjects: AIProject[] = [
   {
     id: 'pocs',
-    title: 'Production proof-of-concepts',
-    badge: { text: 'POC', style: 'neutral' },
+    title: 'PM that ships',
+    badge: { text: 'Code Review', style: 'blue' },
     body: 'Shipped 30+ peer-reviewed PRs to production on Alexa Home Map and 20+ agentic proofs-of-concept for leadership demos, built with Claude Code and Cursor.',
   },
   {
@@ -384,13 +386,13 @@ export const aiProjects: AIProject[] = [
   {
     id: 'prd-gen',
     title: 'Automated PRD generation',
-    badge: { text: 'Internal tool', style: 'neutral' },
+    badge: { text: 'Internal tool', style: 'red' },
     body: 'Agentic workflow that drafts PRDs from initial requirement notes — adopted by a team of 6 PMs, cutting first-draft time by 70% and standardizing spec structure.',
   },
   {
     id: 'slack-digest',
     title: 'Jira-lite app with daily digest agent',
-    badge: { text: 'Internal tool', style: 'neutral' },
+    badge: { text: 'Internal tool', style: 'red' },
     body: 'Custom internal “Jira-lite” organization app with a Slack, email, and calendar digest agent that summarizes conversations, emails, and meeting notes, surfacing action items that otherwise get lost in noise.',
   },
 ];
