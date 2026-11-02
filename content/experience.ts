@@ -114,7 +114,7 @@ export const hero: ExperienceHero = {
   eyebrow: 'Sr. Technical Product Manager — Builder',
   heading: 'James Kocher',
   paragraphs: [
-    'Senior Technical Product Manager with 10+ years productizing ML, AI, and complex technical systems for business and consumer users. Background spans B2B solar PV monitoring at Locus Energy (hardware-agnostic data ingestion at utility scale, Tesla Microgrid) and AI-powered safety products at Amazon | Ring (30M+ users), including the SOPs governing human verification of CV-detected events. Owns the full stack from data pipelines and labeling systems to user-facing interfaces and human-in-the-loop workflows. Ships AI-native internal tooling (Claude Code, Cursor) including a production agentic workflow that triages customer complaints.',
+    'Senior Product Manager and AI-native builder with 10+ years productizing machine learning, computer vision, and consumer mobile products at scale — most recently across 30M+ customers at Amazon | Ring. Led the 0-to-1 launch of Alexa Home Map, a standalone iOS app that turns Ring and Alexa devices into an interactive 3D map of the home, taking it from proof of concept to app build in 10 weeks with coverage in The Verge, Engadget, and CNET. Also launched Ring’s Virtual Security Guard subscription ($1.5M ARR; onboarding completion from 62.9% to 91.2%) and lifted RoboKiller trial-to-paid conversion from 60% to 70%. Ships production code and agentic workflows with Claude Code and Cursor, including 30+ pull requests to production and a triage agent that cut time-to-prioritization 73%. M.S., Columbia University.',
   ],
   ctas: [
     { label: 'jameskocher.com', href: 'https://www.jameskocher.com', external: true },
@@ -149,16 +149,17 @@ export const timeline: TimelineEntry[] = [
     mobileDate: 'Mar 2022 — Present',
     current: true,
     roles: [
-      { title: 'Sr. Product Manager — Technical', years: '2022–Present' },
-      { title: 'Product Manager — Technical', years: '2022' },
+      { title: 'Sr. Product Manager — Technical', years: '2023–Present' },
+      { title: 'Product Manager — Technical', years: '2022–2023' },
     ],
     bullets: [
-      'Own product strategy for the Ring Platform (Web & Mobile) across 30M+ users, defining the roadmap for AI-powered safety features that combine on-device computer vision, cloud inference, and human-in-the-loop monitoring.',
-      'Led 0→1 launch of Virtual Security Guard, Ring’s flagship subscription monitoring service. The full-stack product spans CV-based event detection, real-time human-in-the-loop verification, and a guided onboarding workflow. Improved onboarding completion from 62.9% to 91.2% and cut P50/P90 onboarding time by 43.6% / 84.9%.',
-      'Designed the Standard Operating Procedure (SOP) governing human-operator response after CV-detected person-in-frame events. The SOP specifies decision rules, escalation paths, and verification steps that translate digital signals into trustworthy, real-time, real-world security response.',
+      'Own product strategy for the Ring Platform (Web & Mobile) across 30M+ users, directing 4 scrum teams / ~20 engineers and defining the roadmap for AI-powered safety features that combine on-device computer vision, cloud inference, and human-in-the-loop monitoring.',
+      'Led AI-native adoption across Ring’s software product org: authored the agentic AI tooling setup guide adopted by 30+ PMs, and, as one of the first PMs to ship production PRs, coached 10+ PMs and designers on the Git/PR workflow, enabling them to ship their own code starting in Q3 2025.',
+      'Led 0→1 launch of Virtual Security Guard, Ring’s flagship subscription monitoring service, reaching 15,000 net new subscribers / $1.5M ARR within 20 months. The full-stack product spans CV-based event detection, real-time human-in-the-loop verification, and a guided onboarding workflow. Improved onboarding completion from 62.9% to 91.2%, cut P50/P90 onboarding time by 43.6% / 84.9%, and reduced 90-day subscriber churn from 30% to 15%.',
+      'Designed the Standard Operating Procedure (SOP) governing human-operator response after CV-detected person-in-frame events. The SOP specifies decision rules, escalation paths, and verification steps that translate digital signals into trustworthy, real-time, real-world security response. Cut human-agent response time from ~2 minutes to 15 seconds.',
       'Drove Alexa/Ring Routine integration across multiple orgs, building cross-functional alignment up to the C-suite (Ring CEO/CTO and Amazon VP of Devices); doubled feature engagement vs. baseline Alexa Routines.',
-      'Lead Mobile App Product Manager for the new Alexa Home Map app (announced Oct 2026), an interactive 3D view of the home and property that places Alexa and Ring devices on a live map and animates Ring camera events around the house.',
-      'Set vision across multiple scrum teams; ran Monthly Product and Business Reviews at the Director level, translating telemetry, funnel, and reliability data into prioritized roadmap decisions.',
+      'Lead Mobile App Product Manager for the new Alexa Home Map app (announced Oct 2026), an interactive 3D view of the home and property that places Alexa and Ring devices on a live map and animates Ring camera events around the house. Took it from proof of concept to in-hand app build in 10 weeks, with press coverage across The Verge, Engadget, CNET, and more.',
+      'Ran Monthly Product and Business Reviews at the Director level, translating telemetry, funnel, and reliability data into prioritized roadmap decisions.',
     ],
     media: [
       {
@@ -246,7 +247,7 @@ export const timeline: TimelineEntry[] = [
     ],
     bullets: [
       'Built B2B SaaS platform for monitoring and control of commercial, industrial, and utility-scale solar PV installations. The hardware-agnostic data-ingestion product served 10,000+ accounts of technical end users including solar engineers, asset managers, and utility operators.',
-      'As Product Manager, drove $2.2M in increased market share and 137% growth in assets monitored in 2018; built consensus across engineering, sales, and customers, and shipped two mobile apps to the full user base.',
+      'As Product Manager, drove $2.2M in new revenue and 137% growth in assets monitored in 2018; built consensus across engineering, sales, and customers, and shipped two mobile apps to the full user base.',
       'Identified and validated new product lines by analyzing industry trends and customer signal. Secured the second-largest U.S. solar developer as a beta partner for a new add-on product.',
       'Productized hardware-agnostic data ingestion: led 50+ new hardware and software (API) integrations and shipped a self-service integration feature, increasing new-integration deployment speed by 300%.',
       'Built internal web app and tool suite for common support tasks, reducing support bottlenecks by up to 50% and increasing team scalability.',
@@ -329,25 +330,25 @@ export const aiProjects: AIProject[] = [
     id: 'complaint-triage',
     title: 'Customer-complaint triage agent',
     badge: { text: 'In production', style: 'accent' },
-    body: 'Multi-step agentic workflow that ingests CEO-forwarded customer emails, retrieves similar past complaints, feedback, and existing Jira tickets, then generates a "true problem score" to help the team prioritize issues. Turns ad-hoc executive escalations into structured, evidence-backed prioritization signal.',
+    body: 'Multi-step agentic workflow that ingests CEO-forwarded customer emails, retrieves similar past complaints, feedback, and existing Jira tickets, then generates a "true problem score" to help the team prioritize issues. Turns ad-hoc executive escalations into structured, evidence-backed prioritization signal. In production since Apr 2025, cutting time-to-prioritization by 73%.',
   },
   {
     id: 'prd-gen',
     title: 'Automated PRD generation',
     badge: { text: 'Internal tool', style: 'neutral' },
-    body: 'Agentic workflow that drafts PRDs from initial requirement notes — accelerating spec authoring and standardizing structure across the team.',
+    body: 'Agentic workflow that drafts PRDs from initial requirement notes — adopted by a team of 6 PMs, cutting first-draft time by 70% and standardizing spec structure.',
   },
   {
     id: 'slack-digest',
-    title: 'Slack daily digest agent',
+    title: 'Jira-lite app with daily digest agent',
     badge: { text: 'Internal tool', style: 'neutral' },
-    body: 'Summarizes channel conversations and extracts outstanding to-do items, surfacing action items that otherwise get lost in noise.',
+    body: 'Custom internal “Jira-lite” organization app with a Slack, email, and calendar digest agent that summarizes conversations, emails, and meeting notes, surfacing action items that otherwise get lost in noise.',
   },
   {
     id: 'pocs',
     title: 'Production proof-of-concepts',
     badge: { text: 'POC', style: 'neutral' },
-    body: 'Multiple Claude Code and Cursor built proof-of-concept features merged into production codebases.',
+    body: 'Shipped 30+ peer-reviewed PRs to production on Alexa Home Map and 20+ agentic proofs-of-concept for leadership demos, built with Claude Code and Cursor.',
   },
 ];
 
