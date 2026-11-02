@@ -67,15 +67,16 @@ export function MediaThumb({ item }: { item: MediaItem }) {
       type="button"
       onClick={() => emitOpen(item)}
       aria-label={`Open ${item.caption}`}
-      className="group relative block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg cursor-zoom-in"
+      className="group relative block w-full sm:w-64 shrink-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg cursor-zoom-in"
     >
-      <div className="relative overflow-hidden rounded-lg border border-ink-100 bg-ink-50">
+      {/* Same 16:9 box as video thumbs so every card in the rail matches. */}
+      <div className="relative overflow-hidden rounded-lg border border-ink-100 bg-ink-50 aspect-video">
         <img
           src={asset(thumbSrc)}
           alt={item.alt}
           loading="lazy"
           decoding="async"
-          className="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.03]"
+          className="block w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
       </div>
       <p className="mt-1.5 text-[11px] text-ink-500 leading-snug">
