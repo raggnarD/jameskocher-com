@@ -25,6 +25,9 @@ export type MediaItem =
       src: string;
       alt: string;
       caption: string;
+      /** Fill the thumb edge to edge (no white padding). For images whose
+       *  own background should reach the card edge; best at 16:9. */
+      bleed?: boolean;
     }
   | {
       kind: 'video';
@@ -166,9 +169,10 @@ export const timeline: TimelineEntry[] = [
     media: [
       {
         kind: 'image',
-        src: '/assets/highlights/alexa-home-map.jpg',
+        src: '/assets/experience/alexa-home-map.jpg',
         alt: 'Alexa Home Map on three phones: 3D home map, device remote, and camera timeline',
         caption: 'Alexa Home Map',
+        bleed: true,
       },
       {
         kind: 'image',
@@ -337,6 +341,29 @@ export const timeline: TimelineEntry[] = [
       'Recognized at the 2011 semi-annual all-market meeting for a 100% Net Promoter Score (NPS) in a quarter; ranked in the Top 5 for Genius team NPS (95%) for three years at the #1 trafficked store in the market.',
       'Resolved 50+ critical in-store IT problems; recognized as the in-store “champion” by corporate IT.',
       'Reduced customer wait time for common repairs by 75%+ by implementing a network solution.',
+    ],
+    media: [
+      {
+        kind: 'image',
+        src: '/assets/experience/apple-certified-mac-technician.png',
+        alt: 'Apple Certified Mac Technician badge',
+        caption: 'Apple Certified Mac Technician',
+        bleed: true,
+      },
+      {
+        kind: 'image',
+        src: '/assets/experience/apple-iphone-3g.jpg',
+        alt: 'iPhone 3G launch ad',
+        caption: 'iPhone 3G launch',
+        bleed: true,
+      },
+      {
+        kind: 'image',
+        src: '/assets/experience/apple-store-paramus.jpg',
+        alt: 'Apple Store storefront in a mall',
+        caption: 'Apple Store',
+        bleed: true,
+      },
     ],
   },
 ];
