@@ -155,11 +155,11 @@ export const timeline: TimelineEntry[] = [
     bullets: [
       'Own product strategy for the Ring Platform (Web & Mobile) across 30M+ users, directing 4 scrum teams / ~20 engineers and defining the roadmap for AI-powered safety features that combine on-device computer vision, cloud inference, and human-in-the-loop monitoring.',
       'Led AI-native adoption across Ring’s software product org: authored the agentic AI tooling setup guide adopted by 30+ PMs, and, as one of the first PMs to ship production PRs, coached 10+ PMs and designers on the Git/PR workflow, enabling them to ship their own code starting in Q3 2025.',
-      'Led 0→1 launch of Virtual Security Guard, Ring’s flagship subscription monitoring service, reaching 15,000 net new subscribers / $1.5M ARR within 20 months. The full-stack product spans CV-based event detection, real-time human-in-the-loop verification, and a guided onboarding workflow. Improved onboarding completion from 62.9% to 91.2%, cut P50/P90 onboarding time by 43.6% / 84.9%, and reduced 90-day subscriber churn from 30% to 15%.',
-      'Designed the Standard Operating Procedure (SOP) governing human-operator response after CV-detected person-in-frame events. The SOP specifies decision rules, escalation paths, and verification steps that translate digital signals into trustworthy, real-time, real-world security response. Cut human-agent response time from ~2 minutes to 15 seconds.',
-      'Drove Alexa/Ring Routine integration across multiple orgs, building cross-functional alignment up to the C-suite (Ring CEO/CTO and Amazon VP of Devices); doubled feature engagement vs. baseline Alexa Routines.',
       'Lead Mobile App Product Manager for the new Alexa Home Map app (announced Oct 2026), an interactive 3D view of the home and property that places Alexa and Ring devices on a live map and animates Ring camera events around the house. Took it from proof of concept to in-hand app build in 10 weeks, with press coverage across The Verge, Engadget, CNET, and more.',
+      'Led 0→1 launch of Virtual Security Guard, Ring’s flagship subscription monitoring service, reaching 15,000 net new subscribers / $1.5M ARR within 20 months. The full-stack product spans CV-based event detection, real-time human-in-the-loop verification, and a guided onboarding workflow. Improved onboarding completion from 62.9% to 91.2%, cut P50/P90 onboarding time by 43.6% / 84.9%, and reduced 90-day subscriber churn from 30% to 15%.',
+      'Drove Alexa/Ring Routine integration across multiple orgs, building cross-functional alignment up to the C-suite (Ring CEO/CTO and Amazon VP of Devices); doubled feature engagement vs. baseline Alexa Routines.',
       'Ran Monthly Product and Business Reviews at the Director level, translating telemetry, funnel, and reliability data into prioritized roadmap decisions.',
+      'Designed the Standard Operating Procedure (SOP) governing human-operator response after CV-detected person-in-frame events. The SOP specifies decision rules, escalation paths, and verification steps that translate digital signals into trustworthy, real-time, real-world security response. Cut human-agent response time from ~2 minutes to 15 seconds.',
     ],
     media: [
       {
@@ -202,12 +202,12 @@ export const timeline: TimelineEntry[] = [
       { title: 'Product Manager', years: '2019–2020' },
     ],
     bullets: [
-      'Designed and shipped an internal ML labeling admin portal that productized a research-grade SMS classification system into a scalable labeling tool used by ops teams. Drove 200% improvement in spam-text blocked through continuous ML model refinement and a structured human-in-the-loop labeling workflow.',
-      'Owned the ML-powered Spam SMS filtering roadmap end-to-end, driving accuracy to 95%. Hand-labeled new user-reported messages as spam/not-spam to feed the retraining pipeline; defined the eval criteria, labeling workflow, and human-in-the-loop feedback loop between user reports and model retraining. Raised TextKiller average review from 3.5 stars to 4.3 stars via near-daily filter iteration.',
+      'Lifted RoboKiller trial-to-paid conversion 60% → 70% and user LTV 10.2% via funnel instrumentation, onboarding redesign, and BI/UX partnership on conversion trend analysis.',
       'Shipped 3 mobile apps in one year, including RoboKiller iOS v5.0 (~700K subscribers) and TextKiller, which was designed and productized in 4 weeks. Built consensus on backend/frontend flows across a complex VoIP, telephony, and Mobile OS stack, driving a 20% increase in spam calls blocked per user in 30 days of launch.',
+      'Owned the ML-powered Spam SMS filtering roadmap end-to-end, driving accuracy to 95%. Hand-labeled new user-reported messages as spam/not-spam to feed the retraining pipeline; defined the eval criteria, labeling workflow, and human-in-the-loop feedback loop between user reports and model retraining. Raised TextKiller average review from 3.5 stars to 4.3 stars via near-daily filter iteration.',
+      'Designed and shipped an internal ML labeling admin portal that productized a research-grade SMS classification system into a scalable labeling tool used by ops teams. Drove 200% improvement in spam-text blocked through continuous ML model refinement and a structured human-in-the-loop labeling workflow.',
       'Researched, pitched, and shipped SwitchUp (Top 100 Business category) to 2,000 paid subscribers within 90 days of launch.',
       'Promoted to Sr. PM with Rising Star designation for roadmapping and exec comms across RoboKiller (App Store Top 100 Utilities, App of the Day 2019 & 2020, 1M+ subscribers); met 90% of 2020 OKRs and developed associate PMs, cutting time-to-productive by 20%.',
-      'Lifted RoboKiller trial-to-paid conversion 60% → 70% and user LTV 10.2% via funnel instrumentation, onboarding redesign, and BI/UX partnership on conversion trend analysis.',
     ],
     media: [
       {
@@ -327,6 +327,12 @@ export const timeline: TimelineEntry[] = [
 
 export const aiProjects: AIProject[] = [
   {
+    id: 'pocs',
+    title: 'Production proof-of-concepts',
+    badge: { text: 'POC', style: 'neutral' },
+    body: 'Shipped 30+ peer-reviewed PRs to production on Alexa Home Map and 20+ agentic proofs-of-concept for leadership demos, built with Claude Code and Cursor.',
+  },
+  {
     id: 'complaint-triage',
     title: 'Customer-complaint triage agent',
     badge: { text: 'In production', style: 'accent' },
@@ -343,12 +349,6 @@ export const aiProjects: AIProject[] = [
     title: 'Jira-lite app with daily digest agent',
     badge: { text: 'Internal tool', style: 'neutral' },
     body: 'Custom internal “Jira-lite” organization app with a Slack, email, and calendar digest agent that summarizes conversations, emails, and meeting notes, surfacing action items that otherwise get lost in noise.',
-  },
-  {
-    id: 'pocs',
-    title: 'Production proof-of-concepts',
-    badge: { text: 'POC', style: 'neutral' },
-    body: 'Shipped 30+ peer-reviewed PRs to production on Alexa Home Map and 20+ agentic proofs-of-concept for leadership demos, built with Claude Code and Cursor.',
   },
 ];
 
