@@ -1,5 +1,6 @@
 import Reveal from '@/components/Reveal';
 import type { EducationEntry } from '@/content/experience';
+import { MediaThumb } from './MediaLightbox';
 
 export default function EducationList({
   entries,
@@ -10,18 +11,31 @@ export default function EducationList({
     <div className="space-y-8">
       {entries.map((e, i) => (
         <Reveal as="article" key={e.school} delay={i * 60}>
-          <div className="flex items-baseline justify-between flex-wrap gap-x-4 gap-y-1">
-            <h3 className="font-serif text-2xl text-ink-900 tracking-tight">
-              {e.school}
-            </h3>
-            <p className="text-sm text-ink-500">{e.location}</p>
+          <div className="sm:flex sm:items-start sm:gap-x-8">
+            {e.media && e.media.length > 0 && (
+              <ul className="mb-4 sm:mb-0 space-y-3 max-w-64 sm:shrink-0">
+                {e.media.map((m, j) => (
+                  <li key={j}>
+                    <MediaThumb item={m} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between flex-wrap gap-x-4 gap-y-1">
+                <h3 className="font-serif text-2xl text-ink-900 tracking-tight">
+                  {e.school}
+                </h3>
+                <p className="text-sm text-ink-500">{e.location}</p>
+              </div>
+              <p className="font-medium text-ink-700 mt-1">{e.degree}</p>
+              {e.detail && (
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-700 max-w-readable">
+                  {e.detail}
+                </p>
+              )}
+            </div>
           </div>
-          <p className="font-medium text-ink-700 mt-1">{e.degree}</p>
-          {e.detail && (
-            <p className="mt-2 text-[15px] leading-relaxed text-ink-700 max-w-readable">
-              {e.detail}
-            </p>
-          )}
         </Reveal>
       ))}
     </div>

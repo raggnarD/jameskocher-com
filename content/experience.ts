@@ -79,6 +79,8 @@ export type EducationEntry = {
   location: string;
   degree: string;
   detail?: string;
+  /** Optional thumbnails shown beside the entry (lightbox-openable). */
+  media?: MediaItem[];
 };
 
 export type HeroCta = {
@@ -461,10 +463,26 @@ export const education: EducationEntry[] = [
     degree: 'M.S. Sustainability Management',
     detail:
       'Coursework: Statistics for Sustainability, Energy Efficiency Analysis, GHG / Carbon Footprint Accounting, Cost-Benefit Analysis, Financing the Green Economy.',
+    media: [
+      {
+        kind: 'image',
+        src: '/assets/experience/columbia.png',
+        alt: 'Columbia University logo',
+        caption: 'Columbia University',
+      },
+    ],
   },
   {
     school: 'Franklin & Marshall College',
     location: 'Lancaster, PA',
     degree: 'B.A. Business Administration',
+    media: [
+      {
+        kind: 'image',
+        src: '/assets/experience/franklin-marshall.png',
+        alt: 'Franklin & Marshall College logo',
+        caption: 'Franklin & Marshall College',
+      },
+    ],
   },
 ];
