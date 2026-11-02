@@ -361,7 +361,7 @@ export const timeline: TimelineEntry[] = [
         kind: 'image',
         src: '/assets/experience/apple-store-paramus.jpg',
         alt: 'Apple Store storefront in a mall',
-        caption: 'Apple Store',
+        caption: 'Apple Store - Garden State Plaza',
         bleed: true,
       },
     ],
