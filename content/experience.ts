@@ -294,6 +294,20 @@ export const timeline: TimelineEntry[] = [
       'Represented packaging on two brand activity teams covering 50+ new products and projects, including M&M’s® Crispy.',
       'Improved the packaging pricing model, delivering a 50% reduction in the team’s time expenditure.',
     ],
+    media: [
+      {
+        kind: 'image',
+        src: '/assets/experience/mms-crispy.png',
+        alt: 'M&M’s Crispy packaging',
+        caption: 'M&M’s Crispy',
+      },
+      {
+        kind: 'image',
+        src: '/assets/experience/mms-mega.png',
+        alt: 'M&M’s MEGA packaging',
+        caption: 'M&M’s MEGA',
+      },
+    ],
   },
   {
     kind: 'education-break',
