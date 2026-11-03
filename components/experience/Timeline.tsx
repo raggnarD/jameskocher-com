@@ -104,6 +104,9 @@ function JobItem({ job }: { job: Job }) {
               </Reveal>
             ))}
           </ul>
+          {job.media && job.media.length > 0 && (
+            <MediaRow items={job.media} />
+          )}
         </div>
       </div>
     </li>
@@ -139,6 +142,22 @@ function MediaList({ items }: { items: MediaItem[] }) {
   return (
     <Reveal className="mt-4">
       <ul className="space-y-3 text-left">
+        {items.map((m, i) => (
+          <li key={i}>
+            <MediaThumb item={m} />
+          </li>
+        ))}
+      </ul>
+    </Reveal>
+  );
+}
+
+/** Phone-only: the aside is hidden below sm, so media goes under the
+ *  bullets as a two-column grid. */
+function MediaRow({ items }: { items: MediaItem[] }) {
+  return (
+    <Reveal className="mt-5 sm:hidden">
+      <ul className="grid grid-cols-2 gap-3">
         {items.map((m, i) => (
           <li key={i}>
             <MediaThumb item={m} />
